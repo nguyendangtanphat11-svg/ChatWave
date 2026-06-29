@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API = "https://chatwave-wzgj.onrender.com";
 
 const SecuritySettings = ({ userProvider, showNotification }) => {
     const [password, setPassword] = useState({ current: '', new: '', confirm: '' });
