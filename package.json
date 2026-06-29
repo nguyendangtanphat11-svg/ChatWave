@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "@react-oauth/google": "^0.13.5",
+    "buffer": "^6.0.3",
+    "google-auth-library": "^10.9.0",
+    "jwt-decode": "^4.0.0",
+    "process": "^0.11.10",
+    "simple-peer": "^9.11.1"
+  }
+}
