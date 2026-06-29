@@ -19,10 +19,11 @@ const server = http.createServer(app);
 ========================== */
 
 app.use(cors({
-    origin: true,
+    origin: [
+        "https://chat-wave-theta-wheat.vercel.app"
+    ],
     credentials: true
 }));
-
 app.use(express.json());
 
 // Phục vụ file tĩnh từ thư mục public
@@ -42,7 +43,7 @@ app.get("/", (req, res) => {
 
 const io = new Server(server, {
     cors: {
-        origin: "*", // Allow all origins for simplicity in local dev
+        origin: "https://chat-wave-theta-wheat.vercel.app",
         methods: ["GET", "POST"],
         credentials: true
     }
