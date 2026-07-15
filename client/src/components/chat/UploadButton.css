@@ -1,0 +1,54 @@
+.upload-buttons-container {
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+.upload-icon-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0 8px;
+    color: #0084ff;
+    transition: transform 0.2s;
+}
+
+.upload-icon-btn:hover {
+    transform: scale(1.1);
+}
+
+.upload-icon-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.upload-progress-bar {
+    position: absolute;
+    top: -5px;
+    left: 0;
+    width: 100%;
+    height: 5px;
+    background-color: #e0e0e0;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.upload-progress-bar div {
+    height: 100%;
+    background-color: #0084ff;
+    transition: width 0.1s linear;
+}
+
+/* Dark Theme */
+[data-bs-theme="dark"] .upload-icon-btn {
+    color: #4dabf7;
+}
+
+[data-bs-theme="dark"] .upload-progress-bar {
+    background-color: #3a3b3c;
+}
+
+[data-bs-theme="dark"] .upload-progress-bar div {
+    background-color: #4dabf7;
+}

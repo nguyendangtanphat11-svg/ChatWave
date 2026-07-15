@@ -17,13 +17,25 @@ const server = http.createServer(app);
 /* ==========================
    EXPRESS
 ========================== */
+const allowedOrigins = [
+    "https://chat-wave-theta-wheat.vercel.app",
+    "http://localhost:5173",
+    "https://localhost:5173"
+];
 
-app.use(cors({
-    origin: [
-        "https://chat-wave-theta-wheat.vercel.app"
-    ],
-    credentials: true
-}));
+const corsOptions = {
+    origin: (origin, callback) => {
+        // Cho phép các request không có origin (như Postman, mobile apps)
+        // Hoặc origin nằm trong danh sách allowedOrigins
+        if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true,
+};
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Phục vụ file tĩnh từ thư mục public
@@ -43,8 +55,8 @@ app.get("/", (req, res) => {
 
 const io = new Server(server, {
     cors: {
-        origin: "https://chat-wave-theta-wheat.vercel.app",
-        methods: ["GET", "POST"],
+        origin: allowedOrigins, // Sử dụng chung danh sách origins
+        methods: ["GET", "POST"], // Giữ nguyên các method được phép
         credentials: true
     }
 });

@@ -1,0 +1,94 @@
+.file-message {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    border-radius: 18px;
+    max-width: 300px;
+    margin-bottom: 5px;
+}
+
+.file-message.sent {
+    background-color: #0084ff;
+    color: white;
+    align-self: flex-end;
+}
+
+.file-message.received {
+    background-color: #e4e6eb;
+    color: #050505;
+    align-self: flex-start;
+}
+
+.file-info {
+    display: flex;
+    align-items: center;
+    margin-right: 15px;
+    overflow: hidden;
+}
+
+.file-icon {
+    font-size: 2rem;
+    margin-right: 10px;
+}
+
+.file-details {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.file-name {
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.file-size {
+    font-size: 0.8rem;
+    opacity: 0.9;
+}
+
+.download-button {
+    padding: 5px 10px;
+    border-radius: 15px;
+    text-decoration: none;
+    font-size: 0.8rem;
+    font-weight: 600;
+    transition: background-color 0.2s;
+    white-space: nowrap;
+}
+
+.file-message.sent .download-button {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.file-message.sent .download-button:hover {
+    background-color: rgba(255, 255, 255, 0.4);
+}
+
+.file-message.received .download-button {
+    background-color: rgba(0, 0, 0, 0.1);
+    color: #050505;
+}
+
+.file-message.received .download-button:hover {
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+/* Dark Theme */
+[data-bs-theme="dark"] .file-message.received {
+    background-color: #3a3b3c;
+    color: #e4e6eb;
+}
+
+[data-bs-theme="dark"] .file-message.received .download-button {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #e4e6eb;
+}
+
+[data-bs-theme="dark"] .file-message.received .download-button:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}

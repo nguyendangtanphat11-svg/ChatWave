@@ -10,6 +10,9 @@ import ChatHeader from '../../components/chat/ChatHeader';
 import VideoPanel from '../../components/chat/VideoPanel';
 import ChatControls from '../../components/chat/ChatControls';
 import ChatSidebar from '../../components/chat/ChatSidebar';
+import ImageMessage from '../../components/chat/ImageMessage';
+import FileMessage from '../../components/chat/FileMessage';
+import UploadButton from '../../components/chat/UploadButton';
 
 // --- Helper Functions ---
 const getUserFromStorage = () => {
@@ -202,10 +205,25 @@ const ChatPage = () => {
     const handleSendMessage = (e) => {
         e.preventDefault();
         if (inputValue.trim() && callState === 'in-call') {
-            socketRef.current.emit("chatMessage", { message: inputValue });
-            setMessages(prev => [...prev, { text: inputValue, sender: 'me', time: new Date() }]);
+            const messageData = { type: 'text', text: inputValue, time: new Date() };
+            socketRef.current.emit("chatMessage", messageData);
+            setMessages(prev => [...prev, { ...messageData, sender: 'me' }]);
             setInputValue('');
             socketRef.current.emit('stopTyping');
+        }
+    };
+
+    const handleUploadComplete = (fileData) => {
+        if (callState === 'in-call') {
+            const messageData = {
+                type: fileData.type,
+                url: fileData.url,
+                fileName: fileData.fileName,
+                size: fileData.size,
+                time: new Date(),
+            };
+            socketRef.current.emit("chatMessage", messageData);
+            setMessages(prev => [...prev, { ...messageData, sender: 'me' }]);
         }
     };
 
@@ -298,6 +316,7 @@ const ChatPage = () => {
                  chatBoxRef={chatBoxRef}
                  isPartnerTyping={isPartnerTyping}
                  callState={callState}
+                 onUploadComplete={handleUploadComplete}
              />
              {callState === 'disconnected' && <DisconnectModal onFindNew={handleSkip} onGoHome={handleEndCall} />}
          </div>
