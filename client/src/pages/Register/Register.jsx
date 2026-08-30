@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from "react-router-dom";
 import config from "../../config/config";
+import { useNotifications } from '../../contexts/NotificationContext';
 import './Register.css';
 
 // Inline SVG Icons (replacing react-icons)
@@ -12,6 +13,7 @@ const EyeSlashIcon = () => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 
 const GenderIcon = () => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zM12.75 6a.75.75 0 00-1.5 0v4.257c0 .197-.08.387-.22.527l-1.94 1.94a.75.75 0 101.06 1.06l1.94-1.94c.38-.38.527-.87.527-1.41V6z" clipRule="evenodd" /></svg>;
 
 const RegisterPage = () => {
+    const { toast } = useNotifications();
     const [formData, setFormData] = useState({
         username: '',
         email: '',
@@ -82,7 +84,7 @@ const RegisterPage = () => {
             }
 
             // Registration successful, navigate to login page with a success message
-            alert('Đăng ký thành công! Vui lòng đăng nhập.');
+            toast('Đăng ký thành công! Vui lòng đăng nhập.', 'success');
             navigate('/login');
         } catch (err) {
             setError(err.message);
@@ -178,6 +180,16 @@ const RegisterPage = () => {
                             />
                             <span className="checkmark"></span>
                         </label>
+                        <p className="register-legal-copy">
+                            Bằng việc tạo tài khoản, bạn xác nhận đã đọc và đồng ý với{' '}
+                            <Link to="/terms" className="register-legal-link" onClick={(event) => event.stopPropagation()}>
+                                Điều khoản dịch vụ
+                            </Link>{' '}
+                            và{' '}
+                            <Link to="/privacy" className="register-legal-link" onClick={(event) => event.stopPropagation()}>
+                                Chính sách bảo mật
+                            </Link>.
+                        </p>
                     </div>
                     <button type="submit" className="auth-button" disabled={loading}>
                         {loading ? 'Đang xử lý...' : 'Đăng ký'}

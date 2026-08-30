@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
-import axios from 'axios';
-
-const API = "https://chatwave-wzgj.onrender.com";
+import { updatePassword } from '../../services/userService';
 
 const SecuritySettings = ({ userProvider, showNotification }) => {
     const [password, setPassword] = useState({ current: '', new: '', confirm: '' });
@@ -10,11 +8,11 @@ const SecuritySettings = ({ userProvider, showNotification }) => {
     const [isLoading, setIsLoading] = useState(false);
 
     const handlePasswordChange = (e) => {
-        setPassword({ ...password, [e.target.name]: e.target.value });
+        setPassword((previous) => ({ ...previous, [e.target.name]: e.target.value }));
     };
 
     const toggleShowPassword = (field) => {
-        setShowPassword({ ...showPassword, [field]: !showPassword[field] });
+        setShowPassword((previous) => ({ ...previous, [field]: !previous[field] }));
     };
 
     const handleSubmit = async (e) => {
@@ -30,12 +28,9 @@ const SecuritySettings = ({ userProvider, showNotification }) => {
 
         setIsLoading(true);
         try {
-            const token = localStorage.getItem('token');
-            await axios.put(`${API_URL}/users/password`, {
+            await updatePassword({
                 currentPassword: password.current,
                 newPassword: password.new,
-            }, {
-                headers: { Authorization: `Bearer ${token}` }
             });
             showNotification('Đổi mật khẩu thành công!', 'success');
             setPassword({ current: '', new: '', confirm: '' });

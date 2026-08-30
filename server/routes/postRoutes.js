@@ -1,0 +1,15 @@
+const router = require('express').Router();
+const { protect } = require('../middleware/authMiddleware');
+const { uploadImage, validateUploadedFile } = require('../middleware/upload');
+const { getFeed, getMyPosts, getUserPosts, createPost, deletePost, recallPost, toggleLike, getComments, createComment, recallComment } = require('../controllers/postController');
+router.get('/feed', protect, getFeed);
+router.get('/mine', protect, getMyPosts);
+router.get('/user/:id', protect, getUserPosts);
+router.post('/', protect, uploadImage, validateUploadedFile, createPost);
+router.delete('/:id', protect, deletePost);
+router.patch('/:id/recall', protect, recallPost);
+router.post('/:id/like', protect, toggleLike);
+router.get('/:id/comments', protect, getComments);
+router.post('/:id/comments', protect, createComment);
+router.patch('/:id/comments/:commentId/recall', protect, recallComment);
+module.exports = router;

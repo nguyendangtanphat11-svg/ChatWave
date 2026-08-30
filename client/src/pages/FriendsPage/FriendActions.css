@@ -1,0 +1,6 @@
+.friend-avatar-wrap { cursor: pointer; }
+.friend-avatar-wrap:hover img { outline: 2px solid #a5b4fc; outline-offset: 2px; }
+.friends-detail-profile { width: 100%; border: 0; background: transparent; color: inherit; cursor: pointer; }
+.friends-detail-profile:hover .friends-detail-avatar img { box-shadow: 0 0 0 4px rgba(129,140,248,.18); }
+.friends-detail-actions .friends-remove-button svg { color: #fca5a5; background: rgba(239,68,68,.14); }
+.friends-detail-actions .friends-remove-button:hover { color: #fecaca; }

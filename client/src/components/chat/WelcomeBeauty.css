@@ -1,0 +1,17 @@
+.welcome-beauty-panel { width: 100%; padding: 14px; border: 1px solid rgba(196,181,253,.22); border-radius: 16px; background: linear-gradient(135deg, rgba(46,36,74,.52), rgba(21,31,55,.45)); }
+.welcome-beauty-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.welcome-beauty-heading > div { display: grid; gap: 3px; }
+.welcome-beauty-heading strong { color: #f8fafc; font-size: .92rem; }
+.welcome-beauty-heading span { color: #aeb9d2; font-size: .76rem; }
+.welcome-beauty-selected { padding: 5px 9px; border-radius: 999px; background: rgba(139,92,246,.2); color: #ddd6fe !important; font-weight: 700; white-space: nowrap; }
+.welcome-beauty-options { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.welcome-beauty-option { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 42px; padding: 8px; border: 1px solid rgba(148,163,184,.22); border-radius: 11px; background: rgba(15,23,42,.52); color: #cbd5e1; font: 700 .75rem/1 system-ui, sans-serif; cursor: pointer; transition: background .2s ease, border-color .2s ease, color .2s ease, transform .2s ease; }
+.welcome-beauty-option:hover, .welcome-beauty-option.active { border-color: rgba(196,181,253,.75); background: rgba(99,102,241,.22); color: #fff; }
+.welcome-beauty-option:hover { transform: translateY(-1px); }
+.welcome-beauty-option:focus-visible { outline: 2px solid #c4b5fd; outline-offset: 2px; }
+.welcome-beauty-swatch { width: 15px; height: 15px; flex: 0 0 auto; border-radius: 50%; background: linear-gradient(135deg, #b8d1ed, #53657d); }
+.welcome-beauty-swatch.beauty { background: linear-gradient(135deg, #ffe0d7, #f3a6ac); }
+.welcome-beauty-swatch.peach { background: linear-gradient(135deg, #ffe2cc, #e98a9a); }
+.welcome-beauty-swatch.glow { background: linear-gradient(135deg, #fff3c4, #e8b6df 48%, #c4b5fd); box-shadow: 0 0 8px rgba(255,208,231,.8); }
+@media (max-width: 520px) { .welcome-beauty-options { grid-template-columns: repeat(2, minmax(0, 1fr)); } .welcome-beauty-heading { align-items: flex-start; flex-direction: column; } }
+@media (prefers-reduced-motion: reduce) { .welcome-beauty-option { transition: none; } .welcome-beauty-option:hover { transform: none; } }

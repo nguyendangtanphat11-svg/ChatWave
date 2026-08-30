@@ -1,4 +1,5 @@
 import React from 'react';
+import { getUploadUrl } from '../../utils/imageUrl';
 import './FileMessage.css';
 
 // Helper function to format file size
@@ -11,6 +12,8 @@ const formatFileSize = (bytes) => {
 };
 
 const FileMessage = ({ url, fileName, size, sender }) => {
+    const uploadUrl = getUploadUrl(url);
+
     return (
         <div className={`file-message ${sender === 'me' ? 'sent' : 'received'}`}>
             <div className="file-info">
@@ -20,7 +23,7 @@ const FileMessage = ({ url, fileName, size, sender }) => {
                     <span className="file-size">{formatFileSize(size)}</span>
                 </div>
             </div>
-            <a href={url} download={fileName} className="download-button" target="_blank" rel="noopener noreferrer">
+            <a href={uploadUrl} download={fileName} className="download-button" target="_blank" rel="noopener noreferrer">
                 Download
             </a>
         </div>

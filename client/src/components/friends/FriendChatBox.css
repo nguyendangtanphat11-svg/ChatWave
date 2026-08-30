@@ -1,0 +1,275 @@
+/* 1. Dạng nổi góc màn hình (Dùng cho Dashboard) */
+.chat-box-container.floating {
+    position: fixed;
+    bottom: 0;
+    right: 10px; /* Tăng khoảng cách từ lề phải vào trong (trước là 20px) */
+    width: 390px;
+    height: 450px;
+    background: var(--card-bg, #242526);
+    border-radius: 12px 12px 0 0;
+    box-shadow: -4px -4px 20px rgba(0, 0, 0, 0.3); /* Điều chỉnh bóng đổ nhẹ sang trái */
+    display: flex;
+    flex-direction: column;
+    z-index: 1000;
+    overflow: hidden;
+    border: 1px solid #393a3b;
+    transition: all 0.3s ease;
+}
+
+.chat-box-container.floating.expanded {
+    width: 500px;
+    height: 600px;
+    right: 30px; /* Đảm bảo khi phóng to khung chat vẫn giữ khoảng cách an toàn với mép phải */
+}
+
+/* 2. Dạng lấp đầy khung (Dùng cho trang /friends hoặc /chat) */
+.chat-box-container.inline {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: var(--card-bg, #242526);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: none;
+    box-shadow: none;
+}
+
+/* Các style chung bên trong khung chat */
+.chat-box-header {
+    padding: 10px 12px;
+    background: var(--bg-primary, #18191a);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #393a3b;
+}
+
+.chat-friend-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.chat-avatar-wrapper {
+    position: relative;
+    width: 32px;
+    height: 32px;
+}
+
+.chat-avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.chat-status-dot {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    border: 2px solid #242526;
+}
+
+.chat-friend-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--profile-text-primary, #e4e6eb);
+    margin: 0;
+}
+
+.chat-friend-status-text {
+    font-size: 11px;
+}
+
+.chat-messages-list {
+    flex: 1;
+    padding: 12px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: #18191a;
+}
+
+.chat-message-bubble {
+    max-width: 75%;
+    padding: 8px 12px;
+    font-size: 13px;
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+.chat-input-form {
+    padding: 8px 10px;
+    background: var(--card-bg, #242526);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border-top: 1px solid #393a3b;
+}
+
+.chat-input-field {
+    flex: 1;
+    background: #3a3b3c;
+    border: none;
+    border-radius: 20px;
+    padding: 8px 12px;
+    color: #e4e6eb;
+    font-size: 13px;
+    outline: none;
+}
+
+.chat-icon-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+    border-radius: 50%;
+    transition: background 0.2s;
+}
+
+.chat-icon-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.friend-call-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(145deg, #0b1020 0%, #121a30 55%, #080b14 100%);
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    pointer-events: auto;
+}
+
+.chat-message-wrap { position: relative; display: flex; align-items: flex-start; gap: 4px; max-width: 75%; }
+.chat-message-wrap .chat-message-bubble { max-width: 100%; }
+.chat-message-text-content { white-space: pre-wrap; }
+.chat-message-image { display: block; width: min(100%, 320px); max-height: 360px; margin-top: 7px; border-radius: 10px; object-fit: cover; background: #111827; cursor: zoom-in; }
+.chat-message-file { display: block; margin-top: 7px; padding: 8px 10px; border-radius: 9px; background: rgba(255,255,255,.12); color: inherit; text-decoration: none; }
+.chat-message-menu { position: relative; align-self: center; }
+.chat-message-menu > button { width: 30px; height: 30px; border: 0; border-radius: 50%; background: transparent; color: #aeb7c8; cursor: pointer; }
+.chat-message-menu > button:hover { background: rgba(255,255,255,.12); color: #fff; }
+.chat-message-menu-popover { position: absolute; right: 0; bottom: 34px; z-index: 10; display: grid; min-width: 145px; padding: 5px; border: 1px solid #4b5563; border-radius: 10px; background: #202634; box-shadow: 0 12px 28px rgba(0,0,0,.35); }
+.chat-message-menu-popover button { display: flex; align-items: center; gap: 8px; border: 0; border-radius: 7px; padding: 8px; background: transparent; color: #eef2ff; cursor: pointer; text-align: left; }
+.chat-message-menu-popover button:hover { background: #313a4f; }
+.chat-message-menu-popover button:disabled { opacity: .6; cursor: wait; }
+.chat-attachment-draft { display: flex; align-items: flex-start; gap: 8px; padding: 8px 12px; background: #242526; border-top: 1px solid #393a3b; }
+.chat-attachment-draft img { width: 92px; height: 72px; border-radius: 8px; object-fit: cover; }
+.chat-attachment-draft span { flex: 1; color: #e4e6eb; font-size: 13px; overflow: hidden; text-overflow: ellipsis; }
+.chat-attachment-draft button { width: 28px; height: 28px; border: 0; border-radius: 50%; background: #3a3b3c; color: #fff; cursor: pointer; }
+
+.friend-call-header {
+    padding: 14px 16px;
+    background: rgba(8, 12, 23, 0.78);
+    backdrop-filter: blur(12px);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+}
+
+.friend-call-body {
+    flex: 1;
+    position: relative;
+    background: radial-gradient(circle at center, #222d4d 0%, #0b0f1b 72%);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.friend-call-remote-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    background: #0a0e18;
+}
+
+.friend-call-local-video {
+    position: absolute;
+    bottom: 18px;
+    right: 18px;
+    width: 112px;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    background: #161d30;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.42);
+}
+
+.friend-call-footer {
+    padding: 16px;
+    background: rgba(8, 12, 23, 0.78);
+    backdrop-filter: blur(12px);
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+}
+
+.chat-call-control {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    color: #fff;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+}
+
+.chat-call-action {
+    min-height: 42px;
+    border: 0;
+    border-radius: 22px;
+    padding: 0 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.18s ease, filter 0.18s ease;
+}
+
+.chat-call-action:hover {
+    filter: brightness(1.08);
+    transform: translateY(-1px);
+}
+
+.chat-call-answer {
+    background: #20a957;
+}
+
+.chat-call-hangup {
+    background: #ef4444;
+}
+
+@media (max-width: 480px) {
+    .friend-call-local-video {
+        width: 86px;
+        height: 116px;
+        bottom: 12px;
+        right: 12px;
+    }
+}
+
+.chat-emoji-picker-container {
+    position: absolute;
+    bottom: 60px;
+    left: 10px;
+    z-index: 20;
+}
+
+.chat-message-wrap .chat-message-image { width: min(100%, 320px); max-height: 360px; }

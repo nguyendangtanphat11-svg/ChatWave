@@ -1,0 +1,1 @@
+ALTER TABLE posts ADD COLUMN recalled_at DATETIME NULL AFTER image;

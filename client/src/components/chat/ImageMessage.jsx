@@ -1,14 +1,17 @@
 import React from 'react';
+import { getUploadUrl } from '../../utils/imageUrl';
 import './ImageMessage.css';
 
 const ImageMessage = ({ url, sender }) => {
+    const uploadUrl = getUploadUrl(url);
+
     const openImageInNewTab = () => {
-        window.open(url, '_blank');
+        window.open(uploadUrl, '_blank', 'noopener,noreferrer');
     };
 
     return (
         <div className={`image-message ${sender === 'me' ? 'sent' : 'received'}`} onClick={openImageInNewTab}>
-            <img src={url} alt="Sent content" className="image-message-content" />
+            <img src={uploadUrl} alt="Sent content" className="image-message-content" />
         </div>
     );
 };

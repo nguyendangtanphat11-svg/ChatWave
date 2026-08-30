@@ -1,38 +1,15 @@
-import React from 'react';
-import { FaComments, FaVideo, FaUserFriends, FaClock, FaCalendarAlt } from 'react-icons/fa';
+import React, { useEffect, useState } from 'react';
+import { FaComments, FaHeart, FaRegCommentDots, FaUserFriends, FaCalendarAlt } from 'react-icons/fa';
+import { getUserStatistics } from '../../services/userService';
 
-const Statistics = ({ user }) => {
-    // Dữ liệu giả, bạn sẽ thay thế bằng dữ liệu thật từ API sau này
-    const stats = [
-        { id: 1, icon: <FaComments />, value: user.totalChats || 128, label: 'Cuộc trò chuyện' },
-        { id: 2, icon: <FaVideo />, value: user.totalCalls || 42, label: 'Cuộc gọi video' },
-        { id: 3, icon: <FaUserFriends />, value: user.totalFriends || 12, label: 'Bạn bè' },
-        { id: 4, icon: <FaClock />, value: `${user.usageTime || 96}h`, label: 'Thời gian sử dụng' },
+export default function Statistics({ user }) {
+    const [stats, setStats] = useState(null);
+    useEffect(() => { let active = true; getUserStatistics().then((data) => { if (active) setStats(data); }).catch(() => { if (active) setStats({ friends: 0, posts: 0, receivedLikes: 0, receivedComments: 0, messages: 0 }); }); return () => { active = false; }; }, []);
+    const items = [
+        { id: 'posts', icon: <FaRegCommentDots />, value: stats?.posts, label: 'Bài viết' },
+        { id: 'friends', icon: <FaUserFriends />, value: stats?.friends, label: 'Bạn bè' },
+        { id: 'likes', icon: <FaHeart />, value: stats?.receivedLikes, label: 'Lượt thích nhận được' },
+        { id: 'messages', icon: <FaComments />, value: stats?.messages, label: 'Tin nhắn' },
     ];
-
-    return (
-        <div className="profile-card">
-            <div className="card-header">
-                <h2>Thống kê</h2>
-            </div>
-            <div className="stats-grid">
-                {stats.map(stat => (
-                    <div key={stat.id} className="stat-card">
-                        <div className="stat-icon">{stat.icon}</div>
-                        <div className="stat-value">{stat.value}</div>
-                        <div className="stat-label">{stat.label}</div>
-                    </div>
-                ))}
-            </div>
-             <div className="stat-card" style={{marginTop: '1rem', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '1rem'}}>
-                <div className="stat-icon"><FaCalendarAlt /></div>
-                <div>
-                    <div className="stat-value" style={{fontSize: '1.2rem'}}>{new Date(user.created_at).toLocaleDateString('vi-VN')}</div>
-                    <div className="stat-label">Ngày tham gia</div>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-export default Statistics;
+    return <div className="profile-card"><div className="card-header"><h2>Thống kê</h2></div><div className="stats-grid">{items.map((item) => <div key={item.id} className="stat-card"><div className="stat-icon">{item.icon}</div><div className="stat-value">{stats ? item.value : '—'}</div><div className="stat-label">{item.label}</div></div>)}</div><div className="stat-card" style={{ marginTop: '1rem', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '1rem' }}><div className="stat-icon"><FaCalendarAlt /></div><div><div className="stat-value" style={{ fontSize: '1.2rem' }}>{user?.created_at ? new Date(user.created_at).toLocaleDateString('vi-VN') : '—'}</div><div className="stat-label">Ngày tham gia</div></div></div></div>;
+}

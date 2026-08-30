@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 const db = require('../config/db');
 
-const authMiddleware = async (req, res, next) => {
+const protect = async (req, res, next) => {
     let token;
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
         try {
@@ -17,16 +17,17 @@ const authMiddleware = async (req, res, next) => {
                 return res.status(401).json({ message: 'Không được phép, người dùng không tồn tại' });
             }
             req.user = users[0];
-            next();
+            return next();
         } catch (error) {
             console.error(error);
-            res.status(401).json({ message: 'Không được phép, token không hợp lệ' });
+            return res.status(401).json({ message: 'Không được phép, token không hợp lệ' });
         }
     }
 
     if (!token) {
-        res.status(401).json({ message: 'Không được phép, không có token' });
+        return res.status(401).json({ message: 'Không được phép, không có token' });
     }
 };
 
-module.exports = authMiddleware;
+// Sửa thành export dưới dạng object để khớp với lệnh import { protect } bên authRoutes.js
+module.exports = { protect };

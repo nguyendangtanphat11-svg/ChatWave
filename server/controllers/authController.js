@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require("google-auth-library");
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
 // Hàm trợ giúp để tạo token
 const generateToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -19,27 +20,24 @@ const generateToken = (id) => {
 const registerUser = async (req, res) => {
     const { username, email, password, gender } = req.body;
 
-    // 1. Kiểm tra dữ liệu đầu vào
     if (!username || !email || !password) {
         return res.status(400).json({ message: 'Vui lòng điền đầy đủ username, email và password.' });
     }
 
     try {
-        // 2. Kiểm tra xem email hoặc username đã tồn tại chưa
         const [existingUsers] = await db.query('SELECT * FROM users WHERE email = ? OR username = ?', [email, username]);
         if (existingUsers.length > 0) {
             return res.status(400).json({ message: 'Email hoặc username đã tồn tại.' });
         }
 
-        // 3. Băm mật khẩu (sử dụng bcrypt thay vì bcryptjs)
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        // 4. Lưu người dùng vào database
-        const [result] = await db.query('INSERT INTO users (username, email, password, gender) VALUES (?, ?, ?, ?)', [username, email, hashedPassword, gender || 'Khác']);
-        
+        await db.query(
+            'INSERT INTO users (username, email, password, gender, status) VALUES (?, ?, ?, ?, ?)', 
+            [username, email, hashedPassword, gender || 'Khác', 'offline']
+        );
 
-        // 5. Trả về thông báo thành công
         res.status(201).json({
             message: "Đăng ký thành công! Vui lòng đăng nhập."
         });
@@ -63,7 +61,6 @@ const loginUser = async (req, res) => {
     }
 
     try {
-        // 1. Tìm người dùng bằng email
         const [users] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
         const user = users[0];
 
@@ -71,23 +68,26 @@ const loginUser = async (req, res) => {
             return res.status(401).json({ message: 'Email hoặc mật khẩu không chính xác.' });
         }
 
-        // 2. So sánh mật khẩu
         const isMatch = await bcrypt.compare(password, user.password);
 
         if (!isMatch) {
             return res.status(401).json({ message: 'Email hoặc mật khẩu không chính xác.' });
         }
 
-        // Exclude password from the returned user object
+        // Cập nhật trạng thái thành 'online' trong MySQL khi đăng nhập
+        await db.query('UPDATE users SET status = ? WHERE id = ?', ['online', user.id]);
+
         const userResponse = {
             id: user.id,
             username: user.username,
             email: user.email,
             avatar: user.avatar,
-            gender: user.gender
+            gender: user.gender,
+            country: user.country || 'VN',
+            status: 'online',
+            provider: user.provider
         };
 
-        // 3. Trả về thông tin người dùng và token
         res.status(200).json({
             message: "Đăng nhập thành công",
             token: generateToken(user.id),
@@ -99,7 +99,11 @@ const loginUser = async (req, res) => {
     }
 };
 
-
+/**
+ * @desc    Đăng nhập qua Google
+ * @route   POST /api/auth/google
+ * @access  Public
+ */
 const googleLogin = async (req, res) => {
     try {
         const { credential } = req.body;
@@ -110,7 +114,6 @@ const googleLogin = async (req, res) => {
         });
 
         const payload = ticket.getPayload();
-
         const email = payload.email;
         const username = payload.name;
         const avatar = payload.picture;
@@ -123,19 +126,9 @@ const googleLogin = async (req, res) => {
         let user;
 
         if (users.length === 0) {
-
             const [result] = await db.query(
-                `INSERT INTO users
-                (username,email,password,avatar,gender,provider)
-                VALUES (?,?,?,?,?,?)`,
-                [
-                    username,
-                    email,
-                    "",
-                    avatar,
-                    "Khác",
-                    "google"
-                ]
+                `INSERT INTO users (username, email, password, avatar, gender, provider, status) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                [username, email, "", avatar, "Khác", "google", "online"]
             );
 
             user = {
@@ -143,22 +136,22 @@ const googleLogin = async (req, res) => {
                 username,
                 email,
                 avatar,
-                gender: "Khác"
+                gender: "Khác",
+                country: 'VN',
+                status: "online",
+                provider: "google"
             };
-
         } else {
-
             user = users[0];
+            const updateAvatarQuery = (!user.avatar || user.avatar === "default.png") ? avatar : user.avatar;
+            
+            await db.query(
+                "UPDATE users SET avatar = ?, status = ? WHERE id = ?",
+                [updateAvatarQuery, 'online', user.id]
+            );
 
-            // Nếu chưa có avatar thì cập nhật avatar Google
-            if (!user.avatar || user.avatar === "default.png") {
-                await db.query(
-                    "UPDATE users SET avatar=? WHERE id=?",
-                    [avatar, user.id]
-                );
-
-                user.avatar = avatar;
-            }
+            user.avatar = updateAvatarQuery;
+            user.status = 'online';
         }
 
         res.json({
@@ -168,20 +161,43 @@ const googleLogin = async (req, res) => {
                 username: user.username,
                 email: user.email,
                 avatar: user.avatar,
-                gender: user.gender
+                gender: user.gender,
+                country: user.country || 'VN',
+                status: user.status,
+                provider: user.provider
             }
         });
 
     } catch (err) {
-        console.error(err);
+        console.error("Google Login Error:", err);
         res.status(500).json({
             message: "Google Login Error"
         });
     }
 };
 
+/**
+ * @desc    Đăng xuất người dùng (Cập nhật status thành offline)
+ * @route   POST /api/auth/logout
+ * @access  Private
+ */
+const logoutUser = async (req, res) => {
+    try {
+        const userId = req.user.id; 
+
+        // Cập nhật trạng thái thành 'offline' khi đăng xuất
+        await db.query('UPDATE users SET status = ? WHERE id = ?', ['offline', userId]);
+
+        res.status(200).json({ message: "Đăng xuất thành công" });
+    } catch (error) {
+        console.error("Lỗi đăng xuất:", error);
+        res.status(500).json({ message: 'Lỗi máy chủ' });
+    }
+};
+
 module.exports = {
     registerUser,
     loginUser,
-    googleLogin
+    googleLogin,
+    logoutUser
 };

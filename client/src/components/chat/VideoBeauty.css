@@ -1,0 +1,15 @@
+/* Preset xem trước cho các hiệu ứng làm đẹp trong cuộc gọi video. */
+.filter-preview.beauty {
+    background: linear-gradient(135deg, #ffe0d7 0%, #f3a6ac 100%);
+    filter: saturate(1.08) brightness(1.08);
+}
+
+.filter-preview.peach {
+    background: linear-gradient(135deg, #ffe2cc 0%, #e98a9a 100%);
+    filter: saturate(1.16) brightness(1.06);
+}
+
+.filter-preview.glow {
+    background: radial-gradient(circle at 35% 30%, #fff9d7 0 15%, transparent 16%), linear-gradient(135deg, #ffd7e4 0%, #d7b7ff 100%);
+    box-shadow: 0 0 10px rgba(255, 208, 231, .72);
+}

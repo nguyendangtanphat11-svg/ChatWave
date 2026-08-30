@@ -1,0 +1,73 @@
+.post-media {
+    width: 100%;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    background: #0b1020;
+}
+
+.post-media .post-image {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: min(620px, 72vh);
+    margin: 0;
+    border-radius: 0;
+    object-fit: contain;
+    background: #0b1020;
+}
+
+.post-preview-wrap {
+    position: relative;
+    margin: 0 16px 14px;
+    overflow: hidden;
+    border: 1px solid rgba(148, 163, 184, .2);
+    border-radius: 12px;
+    background: #0f172a;
+}
+
+.post-preview-wrap .post-preview {
+    display: block;
+    width: 100%;
+    max-height: 360px;
+    margin: 0;
+    border-radius: 0;
+    object-fit: contain;
+    background: #0f172a;
+}
+
+.post-preview-wrap button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 32px;
+    height: 32px;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(15, 23, 42, .84);
+    color: #fff;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.post-modal .post-preview {
+    display: block;
+    width: calc(100% - 32px);
+    height: auto;
+    max-height: 360px;
+    margin: 0 16px 14px;
+    border-radius: 12px;
+    object-fit: contain;
+    background: #0f172a;
+}
+
+/* Override the generic avatar selector: .post-composer img { width/height: 42px }. */
+.post-modal .post-composer > img.post-preview,
+.post-modal .post-composer .post-preview-wrap > img.post-preview {
+    width: calc(100% - 32px);
+    height: auto;
+    min-height: 180px;
+    max-height: 360px;
+    margin: 0 16px 14px;
+    object-fit: contain;
+}

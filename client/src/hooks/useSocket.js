@@ -16,8 +16,13 @@ const useSocket = (handlers) => {
             socketRef.current.disconnect();
         }
 
-        // Establish a new connection.
-        socketRef.current = io.connect(config.SOCKET_URL);
+        const token = localStorage.getItem('token');
+        if (!token) return undefined;
+
+        // Establish an authenticated connection if this legacy hook is reused.
+        socketRef.current = io(config.SOCKET_URL, {
+            auth: (callback) => callback({ token: localStorage.getItem('token') || '' }),
+        });
         const socket = socketRef.current;
 
         // --- Standard Connection Listeners ---

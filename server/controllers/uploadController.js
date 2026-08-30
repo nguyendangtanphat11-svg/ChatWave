@@ -1,11 +1,13 @@
+const { sanitizeOriginalFileName } = require('../middleware/upload');
+
 const handleUpload = (req, res, fileType) => {
-    if (!req.file) {
-        return res.status(400).json({ message: 'Không có file nào được tải lên.' });
+    if (req.multerError) {
+        const status = req.multerErrorCode === 'LIMIT_FILE_SIZE' ? 413 : 400;
+        return res.status(status).json({ message: req.multerError });
     }
 
-    // Xử lý lỗi từ multer (ví dụ: file quá lớn, sai định dạng)
-    if (req.multerError) {
-        return res.status(400).json({ message: req.multerError });
+    if (!req.file) {
+        return res.status(400).json({ message: 'Không có file nào được tải lên.' });
     }
 
     const fileUrl = `/uploads/${fileType}s/${req.file.filename}`;
@@ -13,8 +15,9 @@ const handleUpload = (req, res, fileType) => {
     res.status(200).json({
         url: fileUrl,
         type: fileType,
-        fileName: req.file.originalname,
-        size: req.file.size
+        fileName: sanitizeOriginalFileName(req.file.originalname),
+        size: req.file.size,
+        mimeType: req.file.mimetype,
     });
 };
 

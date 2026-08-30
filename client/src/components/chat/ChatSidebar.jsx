@@ -1,37 +1,134 @@
-import React from 'react';
-import MessageItem from './MessageItem';
-import TypingIndicator from './TypingIndicator';
+import React, { useState } from 'react';
+import ImageMessage from './ImageMessage';
+import FileMessage from './FileMessage';
+import UploadButton from './UploadButton';
+import { getAvatarUrl, getInitialAvatarUrl } from '../../utils/imageUrl';
+import './ChatSidebar.css';
 
-const EmojiIcon = () => <svg viewBox="0 0 24 24" fill="currentColor"><path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm-2.625 6c-.54 0-1.024.26-1.313.69a.75.75 0 001.138.975c.05-.087.14-.165.275-.165.135 0 .225.078.275.165a.75.75 0 001.138-.974A1.875 1.875 0 009.375 8.25zm5.25 0c-.54 0-1.024.26-1.313.69a.75.75 0 101.138.975c.05-.087.14-.165.275-.165.135 0 .225.078.275.165a.75.75 0 101.138-.974A1.875 1.875 0 0014.625 8.25zM12 15.75a.75.75 0 01.75.75v.008c0 .414.336.75.75.75h.008a.75.75 0 01.75.75v.008a.75.75 0 01.75.75H9.75a.75.75 0 01.75-.75v-.008a.75.75 0 01.75-.75h.008a.75.75 0 01.75-.75v-.008a.75.75 0 01.75-.75z" clipRule="evenodd" /></svg>;
-const SendIcon = () => <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" /></svg>;
+const ChatSidebar = ({
+    messages,
+    inputValue,
+    handleSendMessage, // <--- Nhận prop này ở đây
+    handleInputChange,
+    partnerInfo,
+    user,
+    chatBoxRef,
+    isPartnerTyping,
+    callState,
+    isOpen,
+    onClose,
+    onUploadComplete
+}) => {
+    // State ẩn/hiện bảng chọn Emoji (nếu bạn dùng thư viện hoặc custom popup)
+    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
-const ChatSidebar = ({ messages, inputValue, setInputValue, handleSendMessage, partnerInfo, user, chatBoxRef, isPartnerTyping, callState }) => {
-    return (
-        <aside className="chat-sidebar">
-            <div className="chat-header-sidebar">Chat với {partnerInfo ? partnerInfo.username : 'người lạ'}</div>
-            <div className="chat-messages" ref={chatBoxRef}>
-                {messages.map((msg, index) => (
-                    <MessageItem key={index} msg={msg} user={user} partnerInfo={partnerInfo} />
-                ))}
-                {isPartnerTyping && <TypingIndicator />}
-            </div>
-            <form className="chat-input-form" onSubmit={handleSendMessage}>
-                <div className="chat-input-wrapper">
-                    <input
-                        type="text"
-                        value={inputValue}
-                        onChange={setInputValue}
-                        onKeyDown={(e) => e.key === 'Enter' && handleSendMessage(e)}
-                        placeholder="Nhập tin nhắn..."
-                        className="chat-input"
-                        disabled={callState !== 'in-call'}
-                    />
-                    <div className="chat-input-actions">
-                        <button type="button"><EmojiIcon /></button>
-                        <button type="submit" disabled={callState !== 'in-call'}><SendIcon /></button>
-                    </div>
+    const renderMessage = (msg, index) => {
+        const isMe = msg.sender === 'me';
+        
+        // Xác định ảnh đại diện (avatar) hiển thị
+        const avatarUser = isMe ? user : partnerInfo;
+        const avatarSrc = getAvatarUrl(avatarUser?.avatar, avatarUser?.username);
+
+        return (
+            <div key={index} className={`message-wrapper ${isMe ? 'sent' : 'received'}`}>
+                {/* Avatar của người gửi (nếu là đối phương thì hiện bên trái, của mình có thể ẩn hoặc hiện bên phải) */}
+                {!isMe && (
+                    <img src={avatarSrc} alt="Avatar" className="message-avatar" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = getInitialAvatarUrl(partnerInfo?.username); }} />
+                )}
+
+                <div className={`message-content-container ${isMe ? 'sent' : 'received'}`}>
+                    {msg.type === 'image' ? (
+                        <ImageMessage url={msg.url} sender={msg.sender} />
+                    ) : msg.type === 'file' ? (
+                        <FileMessage url={msg.url} fileName={msg.fileName} size={msg.size} sender={msg.sender} />
+                    ) : (
+                        <div className="message-bubble">
+                            {msg.message}
+                        </div>
+                    )}
                 </div>
-            </form>
+
+                {isMe && (
+                    <img src={avatarSrc} alt="Avatar" className="message-avatar" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = getInitialAvatarUrl(user?.username); }} />
+                )}
+            </div>
+        );
+    };
+
+    return (
+        <aside id="random-chat-sidebar" className={`chat-sidebar ${callState === 'in-call' ? 'active' : ''} ${isOpen ? 'open' : ''}`} aria-label="Trò chuyện ngẫu nhiên">
+            {/* Header */}
+            <div className="chat-header-sidebar">
+                <h5>Trò chuyện với {partnerInfo?.username || 'người lạ'}</h5>
+                <button type="button" className="chat-sidebar-close mobile-only" onClick={onClose} aria-label="Đóng trò chuyện">×</button>
+            </div>
+
+            {/* Khung chat */}
+            <div className="chat-box" ref={chatBoxRef}>
+                {messages.map(renderMessage)}
+                
+                {isPartnerTyping && (
+                    <div className="message-wrapper received">
+                        <img src={getAvatarUrl(partnerInfo?.avatar, partnerInfo?.username)} alt="Avatar" className="message-avatar" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = getInitialAvatarUrl(partnerInfo?.username); }} />
+                        <div className="message-content-container received">
+                            <div className="message-bubble typing-indicator">
+                                <span></span><span></span><span></span>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* Khu vực nhập liệu */}
+            <div className="chat-input-area">
+                <form onSubmit={handleSendMessage} className="chat-form">
+                    {/* Nhóm các icon tiện ích bên trái (Gửi ảnh/file qua UploadButton tùy chỉnh hoặc nút icon) */}
+                    <div className="chat-actions-left">
+                        {/* Tích hợp nút upload file/ảnh */}
+                        <div className="upload-wrapper" title="Đính kèm file hoặc ảnh">
+                            <UploadButton onUploadComplete={onUploadComplete} />
+                        </div>
+
+                        {/* Nút biểu cảm Emoji */}
+                        <button 
+                            type="button" 
+                            className="action-icon-btn" 
+                            title="Chèn biểu cảm"
+                            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                        >
+                            <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
+                                <line x1="9" y1="9" x2="9.01" y2="9"></line>
+                                <line x1="15" y1="9" x2="15.01" y2="9"></line>
+                            </svg>
+                        </button>
+                    </div>
+
+                    {/* Ô nhập tin nhắn */}
+                  <input
+    type="text"
+    className="form-control"
+    placeholder="Nhập tin nhắn..."
+    value={inputValue}
+    onChange={handleInputChange} // Dùng hàm xử lý sự kiện gõ phím kèm typing ở đây
+    disabled={callState !== 'in-call'}
+/>
+
+                    {/* Nút Gửi */}
+                    <button 
+                        type="submit" 
+                        className="btn btn-primary" 
+                        disabled={!inputValue.trim() || callState !== 'in-call'}
+                        title="Gửi tin nhắn"
+                    >
+                        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                    </button>
+                </form>
+            </div>
         </aside>
     );
 };

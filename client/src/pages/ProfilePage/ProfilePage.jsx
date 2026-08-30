@@ -1,198 +1,212 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import './ProfilePage.css';
+import ProfileCover from '../../components/ProfilePage/ProfileCover';
+import ProfileHeader from '../../components/ProfilePage/ProfileHeader';
+import ProfileTabs from '../../components/ProfilePage/ProfileTabs';
+import ProfileIntro from '../../components/ProfilePage/ProfileIntro';
+import PersonalInfo from '../../components/ProfilePage/PersonalInfo';
+import Statistics from '../../components/ProfilePage/Statistics';
+import SecuritySettings from '../../components/ProfilePage/SecuritySettings';
+import AppSettings from '../../components/ProfilePage/AppSettings';
+import LoadingSpinner from '../../components/common/LoadingSpinner/LoadingSpinner';
+import Notification from '../../components/common/Notification/Notification';
+import { useUser } from '../../contexts/UserContext';
+import { updateAvatar, updateCover, updateProfile } from '../../services/userService';
+import PostFeed from '../../components/posts/PostFeed';
+import ProfileFriends from '../../components/ProfilePage/ProfileFriends';
 
-import ProfileHeader from "../../components/ProfilePage/ProfileHeader";
-import PersonalInfo from "../../components/ProfilePage/PersonalInfo";
-import Statistics from "../../components/ProfilePage/Statistics";
-import SecuritySettings from "../../components/ProfilePage/SecuritySettings";
-import AppSettings from "../../components/ProfilePage/AppSettings";
-
-import LoadingSpinner from "../../components/common/LoadingSpinner/LoadingSpinner";
-import Notification from "../../components/common/Notification/Notification";
-
-const API_URL = `${import.meta.env.VITE_API_URL}/api`;
+const AVATAR_MAX_SIZE = 5 * 1024 * 1024;
+const COVER_MAX_SIZE = 10 * 1024 * 1024;
+const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 
 const ProfilePage = () => {
-    const [user, setUser] = useState(null);
+    const navigate = useNavigate();
+    const { user, setUser, refreshUser } = useUser();
+    const avatarInputRef = useRef(null);
+    const coverInputRef = useRef(null);
     const [initialUser, setInitialUser] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
+    const [activeTab, setActiveTab] = useState('about');
     const [notification, setNotification] = useState({ message: '', type: '' });
     const [avatarFile, setAvatarFile] = useState(null);
     const [avatarPreview, setAvatarPreview] = useState(null);
+    const [coverFile, setCoverFile] = useState(null);
+    const [coverPreview, setCoverPreview] = useState(null);
 
-    const navigate = useNavigate();
-
-    const showNotification = (message, type) => {
+    const showNotification = useCallback((message, type) => {
         setNotification({ message, type });
-        setTimeout(() => setNotification({ message: '', type: '' }), 3000);
+    }, []);
+
+    const resetInput = (inputRef) => {
+        if (inputRef.current) inputRef.current.value = '';
     };
 
     const fetchUserProfile = useCallback(async () => {
         setIsLoading(true);
         try {
-            const token = localStorage.getItem('token');
-            if (!token) {
+            const refreshedUser = await refreshUser();
+            if (!refreshedUser) {
                 navigate('/login');
                 return;
             }
-            const { data } = await axios.get(`${API_URL}/users/profile`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            setUser(data);
-            setInitialUser(data);
-            setAvatarPreview(data.avatar);
+            setInitialUser({ ...refreshedUser });
         } catch (error) {
-            console.error('Failed to fetch user profile:', error);
+            console.error('Không thể tải profile:', error);
             showNotification('Không thể tải thông tin người dùng.', 'error');
-            if (error.response?.status === 401) {
-                localStorage.removeItem('token');
-                navigate('/login');
-            }
+            if (error.response?.status === 401) navigate('/login');
         } finally {
             setIsLoading(false);
         }
-    }, [navigate]);
+    }, [navigate, refreshUser, showNotification]);
 
-    useEffect(() => {
-        fetchUserProfile();
-    }, [fetchUserProfile]);
+    useEffect(() => { fetchUserProfile(); }, [fetchUserProfile]);
 
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setUser({ ...user, [name]: value });
+    useEffect(() => () => {
+        if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+    }, [avatarPreview]);
+
+    useEffect(() => () => {
+        if (coverPreview) URL.revokeObjectURL(coverPreview);
+    }, [coverPreview]);
+
+    const validateImage = (file, maxSize) => {
+        if (!file) return 'Vui lòng chọn một ảnh.';
+        if (!ALLOWED_IMAGE_TYPES.has(file.type)) return 'Chỉ chấp nhận ảnh JPG, JPEG, PNG hoặc WEBP.';
+        if (file.size > maxSize) return `Dung lượng ảnh tối đa là ${maxSize / 1024 / 1024}MB.`;
+        return null;
     };
 
-    const handleAvatarChange = (e) => {
-        const file = e.target.files[0];
-        if (file && file.type.startsWith('image/')) {
-            setAvatarFile(file);
-            setAvatarPreview(URL.createObjectURL(file));
-            if (!isEditing) setIsEditing(true); // Tự động bật chế độ chỉnh sửa khi chọn ảnh
-        } else if (file) {
-            showNotification('Vui lòng chọn một file ảnh hợp lệ.', 'error');
-        }
+    const handleImageChange = (event, setFile, setPreview, maxSize) => {
+        const file = event.target.files?.[0];
+        event.target.value = '';
+        const validationError = validateImage(file, maxSize);
+        if (validationError) return showNotification(validationError, 'error');
+        setFile(file);
+        setPreview(URL.createObjectURL(file));
     };
 
-    const handleUpdateProfile = async () => {
-        setIsLoading(true);
+    const handleAvatarChange = (event) => {
+        handleImageChange(event, setAvatarFile, setAvatarPreview, AVATAR_MAX_SIZE);
+        setIsEditing(true);
+    };
+
+    const handleCoverChange = (event) => handleImageChange(event, setCoverFile, setCoverPreview, COVER_MAX_SIZE);
+
+    const handleInputChange = (event) => {
+        const { name, value } = event.target;
+        setUser((previousUser) => ({ ...previousUser, [name]: value }));
+    };
+
+    const clearAvatarDraft = () => {
+        setAvatarFile(null);
+        setAvatarPreview(null);
+        resetInput(avatarInputRef);
+    };
+
+    const clearCoverDraft = () => {
+        setCoverFile(null);
+        setCoverPreview(null);
+        resetInput(coverInputRef);
+    };
+
+    const syncProfile = async () => {
+        const refreshedUser = await refreshUser();
+        setInitialUser({ ...refreshedUser });
+        return refreshedUser;
+    };
+
+    const handleSaveProfile = async () => {
+        if (!user || !initialUser) return;
+        setIsSaving(true);
         try {
-            const token = localStorage.getItem('token');
-            let profileUpdated = false;
-
-            // 1. Update avatar if changed
-            if (avatarFile) {
-                const formData = new FormData();
-                formData.append('avatar', avatarFile);
-                await axios.put(`${API_URL}/users/avatar`, formData, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-                profileUpdated = true;
-            }
-
-            // 2. Update profile info if changed
-            const changedData = Object.keys(user).reduce((acc, key) => {
-                if (user[key] !== initialUser[key] && ['username', 'fullName', 'gender'].includes(key)) {
-                    acc[key] = user[key];
-                }
-                return acc;
+            if (avatarFile) await updateAvatar(avatarFile);
+            const changedData = ['username', 'fullName', 'gender', 'country'].reduce((result, key) => {
+                if (user[key] !== initialUser[key]) result[key] = user[key];
+                return result;
             }, {});
-
-            if (Object.keys(changedData).length > 0) {
-                 await axios.put(`${API_URL}/users/profile`, changedData, {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
-                profileUpdated = true;
+            if (Object.keys(changedData).length > 0) await updateProfile({ ...initialUser, ...changedData });
+            if (!avatarFile && Object.keys(changedData).length === 0) {
+                showNotification('Không có thay đổi để lưu.', 'info');
+                return;
             }
-            
-            if (profileUpdated) {
-                showNotification('Cập nhật thông tin thành công!', 'success');
-                setIsEditing(false);
-                await fetchUserProfile(); // Tải lại dữ liệu mới nhất
-            } else {
-                 showNotification('Không có gì để cập nhật.', 'info');
-                 setIsEditing(false);
-            }
-
+            await syncProfile();
+            clearAvatarDraft();
+            setIsEditing(false);
+            showNotification('Cập nhật thông tin thành công!', 'success');
         } catch (error) {
-            console.error('Failed to update profile:', error);
+            console.error('Không thể cập nhật profile:', error);
             showNotification(error.response?.data?.message || 'Cập nhật thất bại.', 'error');
         } finally {
-            setIsLoading(false);
-            setAvatarFile(null);
+            setIsSaving(false);
         }
     };
-    
-    const handleLogout = () => {
-        localStorage.removeItem('token');
-        navigate('/login');
-    };
 
-    const handleDeleteAccount = async () => {
-        if (window.confirm('Bạn có chắc chắn muốn xóa tài khoản? Hành động này không thể hoàn tác.')) {
-            showNotification('Chức năng xóa tài khoản đang được phát triển.', 'info');
+    const handleSaveCover = async () => {
+        if (!coverFile) return;
+        setIsSaving(true);
+        try {
+            await updateCover(coverFile);
+            await syncProfile();
+            clearCoverDraft();
+            showNotification('Cập nhật ảnh bìa thành công!', 'success');
+        } catch (error) {
+            console.error('Không thể cập nhật ảnh bìa:', error);
+            showNotification(error.response?.data?.message || 'Cập nhật ảnh bìa thất bại.', 'error');
+        } finally {
+            setIsSaving(false);
         }
     };
 
     const handleCancel = () => {
-        setUser(initialUser);
-        setAvatarPreview(initialUser.avatar);
-        setAvatarFile(null);
+        if (initialUser) setUser({ ...initialUser });
+        clearAvatarDraft();
         setIsEditing(false);
     };
 
-    if (isLoading && !user) { // Chỉ hiển thị loading toàn trang khi chưa có dữ liệu
-        return <LoadingSpinner />;
-    }
+    const handleLogout = () => {
+        window.dispatchEvent(new Event('auth:logout'));
+        localStorage.removeItem('token');
+        setUser(null);
+        navigate('/login');
+    };
 
-    if (!user) {
-        return <div className="profile-container">Không tìm thấy thông tin người dùng.</div>;
-    }
+    if (isLoading && !user) return <LoadingSpinner />;
+    if (!user) return <div className="profile-container">Không tìm thấy thông tin người dùng.</div>;
+
+    const showAbout = activeTab === 'about';
+    const showSettings = activeTab === 'settings';
 
     return (
-        <div className="profile-container fade-in">
-            {isLoading && <LoadingSpinner />}
+        <main className="profile-container profile-fade-in">
+            {isLoading && <div className="profile-loading-overlay"><LoadingSpinner /></div>}
             {notification.message && <Notification message={notification.message} type={notification.type} />}
-            
-            <ProfileHeader 
-                user={user} 
-                avatarPreview={avatarPreview}
-                onAvatarChange={handleAvatarChange}
-            />
-
-            <div className="profile-grid">
-                <div className="profile-main-content">
-                    <PersonalInfo 
-                        user={user} 
-                        isEditing={isEditing}
-                        onInputChange={handleInputChange}
-                    />
-                    <SecuritySettings userProvider={user.provider} showNotification={showNotification} />
-                    <AppSettings />
-                </div>
-                <div className="profile-sidebar">
-                    <Statistics user={user} />
-                </div>
-            </div>
-
-            <div className="profile-actions">
-                {isEditing ? (
-                    <>
-                        <button onClick={handleUpdateProfile} className="btn btn-primary">Lưu thay đổi</button>
-                        <button onClick={handleCancel} className="btn btn-secondary">Hủy</button>
-                    </>
-                ) : (
-                    <button onClick={() => setIsEditing(true)} className="btn btn-secondary">Chỉnh sửa thông tin</button>
+            <div className="profile-shell">
+                <ProfileCover user={user} coverPreview={coverPreview} coverInputRef={coverInputRef} isSaving={isSaving} onCoverChange={handleCoverChange} onSave={handleSaveCover} onCancel={clearCoverDraft} />
+                <ProfileHeader user={user} avatarPreview={avatarPreview} avatarInputRef={avatarInputRef} onAvatarChange={handleAvatarChange} onEdit={() => { setIsEditing(true); setActiveTab('about'); }} onLogout={handleLogout} isSaving={isSaving} />
+                <ProfileTabs activeTab={activeTab} onChange={setActiveTab} />
+                {(showAbout || showSettings) && (
+                    <div className="profile-grid">
+                        <aside className="profile-sidebar">
+                            <ProfileIntro user={user} />
+                            <Statistics user={user} />
+                        </aside>
+                        <section className="profile-main-content">
+                            {showAbout && <PersonalInfo user={user} isEditing={isEditing} onInputChange={handleInputChange} />}
+                            {(showAbout || showSettings) && <SecuritySettings userProvider={user.provider} showNotification={showNotification} />}
+                            {showSettings && <AppSettings />}
+                            {showAbout && <section className="profile-card"><div className="card-header"><h2>Hoạt động gần đây</h2></div><p className="empty-state">Các hoạt động gần đây sẽ xuất hiện tại đây.</p></section>}
+                        </section>
+                    </div>
                 )}
-                <button onClick={handleLogout} className="btn btn-secondary">Đăng xuất</button>
-                <button onClick={handleDeleteAccount} className="btn btn-danger">Xóa tài khoản</button>
+                {activeTab === 'posts' && <PostFeed user={user} mine />}
+                {activeTab === 'friends' && <ProfileFriends />}
+                {!showAbout && !showSettings && activeTab !== 'posts' && activeTab !== 'friends' && <section className="profile-card profile-tab-placeholder"><h2>Ảnh</h2><p className="empty-state">Nội dung này sẽ sớm được cập nhật.</p></section>}
+                {isEditing && <div className="profile-actions"><button type="button" className="btn btn-primary" onClick={handleSaveProfile} disabled={isSaving}>{isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}</button><button type="button" className="btn btn-secondary" onClick={handleCancel} disabled={isSaving}>Hủy</button></div>}
             </div>
-        </div>
+        </main>
     );
 };
 

@@ -1,0 +1,2 @@
+ALTER TABLE users
+    ADD COLUMN country VARCHAR(2) NOT NULL DEFAULT 'VN' AFTER gender;

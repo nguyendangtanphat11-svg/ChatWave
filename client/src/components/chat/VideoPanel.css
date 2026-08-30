@@ -1,0 +1,139 @@
+.video-panel-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background-color: #0f172a; /* Màu nền tối sang trọng */
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Khung chứa video của đối phương (chiếm toàn màn hình) */
+.remote-video-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.remote-video-container video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Giúp video không bị méo hình */
+}
+
+/* Khung chứa video của bản thân (hiển thị nhỏ ở góc dưới bên phải) */
+.local-video-container {
+    position: absolute;
+    bottom: 24px;
+    right: 24px;
+    width: 180px;
+    height: 120px;
+    background-color: #1e293b;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    z-index: 10;
+    transition: transform 0.2s ease;
+}
+
+.local-video-container:hover {
+    transform: scale(1.05);
+}
+
+.local-video-container video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scaleX(-1); /* Hiệu ứng gương (mirror) cho webcam của mình */
+}
+
+/* Giao diện chờ khi chưa có stream của đối phương */
+.waiting-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.85);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: #cbd5e1;
+    font-family: sans-serif;
+    gap: 12px;
+    z-index: 5;
+}
+
+/* Hiệu ứng loading vòng tròn đơn giản */
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(255, 255, 255, 0.1);
+    border-left-color: #6366f1;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+/* Khung hiển thị Avatar khi tắt camera (Áp dụng chung cho cả local và remote) */
+.avatar-placeholder,
+.avatar-placeholder-local {
+    width: 100%;
+    height: 100%;
+    background-color: #1e293b;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    color: #94a3b8;
+    font-family: sans-serif;
+    font-size: 0.9rem;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 4;
+}
+
+/* Kiểu dáng cho ảnh đại diện (Avatar) */
+.fallback-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(99, 102, 241, 0.5);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Tùy chỉnh riêng cho avatar ở khung nhỏ góc màn hình (local) */
+.avatar-placeholder-local .fallback-avatar {
+    width: 45px;
+    height: 45px;
+    border-width: 1.5px;
+}
+
+.avatar-placeholder p {
+    margin: 0;
+    font-weight: 500;
+    color: #cbd5e1;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive cho màn hình điện thoại nhỏ */
+@media (max-width: 640px) {
+    .local-video-container {
+        width: 120px;
+        height: 90px;
+        bottom: 16px;
+        right: 16px;
+    }
+}
+
+.video-panel-wrapper{grid-area:main-content;margin:16px;border:1px solid rgba(129,140,248,.24);border-radius:24px;background:radial-gradient(circle at 80% 15%,rgba(79,70,229,.22),transparent 28%),#060912;box-shadow:0 28px 70px rgba(0,0,0,.36)}.remote-video-container::after{content:'';position:absolute;inset:0;pointer-events:none;border:1px solid rgba(255,255,255,.08);border-radius:inherit}.remote-video-container video{filter:contrast(1.04) saturate(1.05)}.waiting-overlay{background:radial-gradient(circle at center,rgba(30,41,59,.82),rgba(5,8,16,.95))}.waiting-overlay p{max-width:280px;text-align:center;line-height:1.55}.local-video-container{border-color:rgba(199,210,254,.5);box-shadow:0 18px 38px rgba(0,0,0,.48)}
+
+.camera-filter-control{position:absolute;z-index:24;right:24px;bottom:156px}.camera-filter-trigger{min-height:38px;border:1px solid rgba(255,255,255,.24);border-radius:10px;padding:0 12px;background:rgba(12,18,33,.9);color:#f8fafc;font:700 12px/1 Inter,system-ui,sans-serif;cursor:pointer;backdrop-filter:blur(8px)}.camera-filter-trigger:hover,.camera-filter-trigger:focus-visible{background:#303b57;outline:2px solid #a5b4fc;outline-offset:2px}.camera-filter-menu{position:absolute;right:0;bottom:46px;width:154px;padding:6px;border:1px solid rgba(148,163,184,.35);border-radius:12px;background:rgba(15,23,42,.96);box-shadow:0 14px 32px rgba(0,0,0,.42);backdrop-filter:blur(12px)}.camera-filter-menu button{display:flex;align-items:center;gap:8px;width:100%;border:0;border-radius:8px;padding:7px;background:transparent;color:#dbeafe;font:600 12px/1 Inter,system-ui,sans-serif;text-align:left;cursor:pointer}.camera-filter-menu button:hover,.camera-filter-menu button.active{background:rgba(99,102,241,.24);color:#fff}.filter-preview{display:block;width:22px;height:22px;border-radius:6px;background:linear-gradient(135deg,#b8d1ed,#53657d)}.filter-preview.warm{filter:saturate(1.18) sepia(.4)}.filter-preview.cool{filter:hue-rotate(25deg)}.filter-preview.contrast{filter:contrast(1.8)}.filter-preview.mono{filter:grayscale(1)}@media(max-width:640px){.camera-filter-control{right:16px;bottom:116px}}

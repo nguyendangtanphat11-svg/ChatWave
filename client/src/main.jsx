@@ -1,14 +1,17 @@
-import React, { StrictMode } from "react";
+import React from "react";
 import ReactDOM from "react-dom/client";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import App from "./App.jsx";
+import { UserProvider } from "./contexts/UserContext.jsx";
+import { NotificationProvider } from "./contexts/NotificationContext.jsx";
+import "./services/axiosClient.js";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  <StrictMode>
-    <GoogleOAuthProvider
-      clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}
-    >
-      <App />
-    </GoogleOAuthProvider>
-  </StrictMode>
+  <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+    <NotificationProvider>
+      <UserProvider>
+        <App />
+      </UserProvider>
+    </NotificationProvider>
+  </GoogleOAuthProvider>
 );

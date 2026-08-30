@@ -15,6 +15,7 @@
     "@vitejs/plugin-basic-ssl": "^2.3.0",
     "axios": "^1.18.1",
     "bootstrap": "^5.3.8",
+    "emoji-picker-react": "^4.19.1",
     "jwt-decode": "^4.0.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
