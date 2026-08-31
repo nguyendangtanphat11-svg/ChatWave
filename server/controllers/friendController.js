@@ -21,8 +21,9 @@ const sendFriendRequest = async (req, res) => {
         }
 
         const [result] = await db.query(
-            'INSERT INTO friend_requests (sender_id, receiver_id, status) VALUES (?, ?, "pending")',
-            [senderId, receiverId]
+            `INSERT INTO friend_requests (sender_id, receiver_id, status)
+             VALUES (?, ?, ?)`,
+            [senderId, receiverId, 'pending'],
         );
 
         const [senders] = await db.query('SELECT id, username, fullName, avatar FROM users WHERE id = ?', [senderId]);
@@ -58,7 +59,7 @@ const respondFriendRequest = async (req, res) => {
         }
 
         if (status === 'accepted') {
-            await db.query('UPDATE friend_requests SET status = "accepted" WHERE id = ?', [requestId]);
+            await db.query('UPDATE friend_requests SET status = ? WHERE id = ?', [status, requestId]);
             req.app.get('io')?.to(`user_${String(request[0].sender_id)}`).emit('friendRequestAccepted', { userId, requestId });
             res.status(200).json({ message: 'Đã chấp nhận kết bạn!' });
         } else {
@@ -81,8 +82,8 @@ const getFriendsAndRequests = async (req, res) => {
             `SELECT u.id, u.username, u.fullName, u.avatar, u.status 
              FROM friend_requests fr 
              JOIN users u ON (u.id = CASE WHEN fr.sender_id = ? THEN fr.receiver_id ELSE fr.sender_id END)
-             WHERE (fr.sender_id = ? OR fr.receiver_id = ?) AND fr.status = 'accepted'`,
-            [userId, userId, userId]
+             WHERE (fr.sender_id = ? OR fr.receiver_id = ?) AND fr.status = ?`,
+            [userId, userId, userId, 'accepted']
         );
 
         // Lấy danh sách lời mời kết bạn gửi đến đang chờ duyệt (status = 'pending')
@@ -90,8 +91,8 @@ const getFriendsAndRequests = async (req, res) => {
             `SELECT fr.id as requestId, u.id, u.username, u.fullName, u.avatar 
              FROM friend_requests fr 
              JOIN users u ON u.id = fr.sender_id 
-             WHERE fr.receiver_id = ? AND fr.status = 'pending'`,
-            [userId]
+             WHERE fr.receiver_id = ? AND fr.status = ?`,
+            [userId, 'pending']
         );
 
         res.status(200).json({ friends, pendingRequests });
@@ -145,7 +146,7 @@ const removeFriend = async (req, res) => {
     try {
         const friendId = Number(req.params.id);
         if (!Number.isInteger(friendId) || friendId <= 0 || friendId === Number(req.user.id)) return res.status(400).json({ message: 'Người dùng không hợp lệ.' });
-        const [result] = await db.query(`DELETE FROM friend_requests WHERE status = 'accepted' AND ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?))`, [req.user.id, friendId, friendId, req.user.id]);
+        const [result] = await db.query(`DELETE FROM friend_requests WHERE status = ? AND ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?))`, ['accepted', req.user.id, friendId, friendId, req.user.id]);
         if (!result.affectedRows) return res.status(404).json({ message: 'Hai người hiện không phải bạn bè.' });
         req.app.get('io')?.to(`user_${friendId}`).emit('friendRemoved', { userId: req.user.id });
         return res.status(204).end();
