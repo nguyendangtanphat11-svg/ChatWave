@@ -22,4 +22,4 @@ export const updateCover = async (file) => {
     formData.append('cover', file);
     return (await api.put('/users/cover', formData)).data;
 };
-export const updatePassword = async (data) => (await api.put('/profile/password', data)).data;
+export const updatePassword = async (data) => (await api.put('/users/password', data)).data;

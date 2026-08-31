@@ -1,4 +1,3 @@
-import React from 'react';
 import { getAvatarUrl, getInitialAvatarUrl } from '../../utils/imageUrl';
 
 const LogoutIcon = () => <svg viewBox="0 0 24 24" fill="currentColor"><path fillRule="evenodd" d="M7.5 3.75A1.5 1.5 0 006 5.25v13.5a1.5 1.5 0 001.5 1.5h6a1.5 1.5 0 001.5-1.5V15a.75.75 0 00-1.5 0v3.75a.75.75 0 01-.75.75h-6a.75.75 0 01-.75-.75V5.25a.75.75 0 01.75-.75h6a.75.75 0 01.75.75V9A.75.75 0 0015 9V5.25a1.5 1.5 0 00-1.5-1.5h-6z" clipRule="evenodd" /><path fillRule="evenodd" d="M16.72 12.72a.75.75 0 001.06 0l3.75-3.75a.75.75 0 000-1.06l-3.75-3.75a.75.75 0 10-1.06 1.06l2.47 2.47H9.75a.75.75 0 000 1.5h9.44l-2.47 2.47a.75.75 0 000 1.06z" clipRule="evenodd" /></svg>;

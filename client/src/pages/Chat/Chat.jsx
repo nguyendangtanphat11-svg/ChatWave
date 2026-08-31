@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import "./Chat.css";
 
@@ -14,7 +14,7 @@ import ChatSidebar from '../../components/chat/ChatSidebar';
 const getUserFromStorage = () => {
     try { 
         return JSON.parse(localStorage.getItem('user')); 
-    } catch (e) { 
+    } catch {
         return null; 
     }
 };

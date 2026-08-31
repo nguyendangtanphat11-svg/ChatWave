@@ -13,7 +13,6 @@ const db = require("./config/db");
 
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
-const profileRoutes = require("./routes/profileRoutes");
 const friendRoutes = require("./routes/friendRoutes");
 const messageRoutes = require('./routes/messageRoutes');
 const postRoutes = require('./routes/postRoutes');
@@ -68,7 +67,6 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
 // API Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
-app.use("/api/profile", profileRoutes);
 app.use("/api/friends", friendRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/posts', postRoutes);

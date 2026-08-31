@@ -201,6 +201,7 @@
 .welcome-status-card.on { border-left: 4px solid var(--success); }
 .welcome-status-card.off { border-left: 4px solid var(--danger); }
 .status-icon { font-size: 0.8rem; }
+.status-icon svg { width: .9rem; height: .9rem; vertical-align: middle; }
 .status-text { display: flex; flex-direction: column; line-height: 1.3; }
 .status-text strong { font-weight: 600; color: var(--text-primary); }
 .status-text span { font-size: 0.8rem; color: var(--text-secondary); }

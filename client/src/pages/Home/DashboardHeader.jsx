@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 import { FaRegBell } from 'react-icons/fa'; // Hoặc thư viện icon bạn đang dùng
 import { getAvatarUrl, getInitialAvatarUrl } from '../../utils/imageUrl';

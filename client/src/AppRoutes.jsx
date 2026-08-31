@@ -1,8 +1,8 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { io } from "socket.io-client";
 import config from "./config/config";
-import { useUser } from "./contexts/UserContext";
+import { useUser } from "./contexts/useUser";
 
 import HomePage from "./pages/Home/Home";
 import LoginPage from "./pages/Login/Login";

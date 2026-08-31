@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { FaArrowLeft, FaCheckCircle, FaLock, FaShieldAlt } from 'react-icons/fa';
 import Footer from '../Home/Footer';

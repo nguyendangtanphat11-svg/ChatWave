@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import { 
     FaTimes, FaImage, FaPaperclip, FaSmile, FaVideo, 
@@ -8,7 +8,7 @@ import {
 import EmojiPicker from 'emoji-picker-react';
 import { getAvatarUrl, getInitialAvatarUrl } from '../../utils/imageUrl';
 import { CHAT_FILE_ACCEPT, CHAT_IMAGE_ACCEPT, validateChatUpload } from '../../utils/uploadValidation';
-import { useNotifications } from '../../contexts/NotificationContext';
+import { useNotifications } from '../../contexts/useNotifications';
 import './FriendChatBox.css';
 import './FriendChatFacebook.css';
 

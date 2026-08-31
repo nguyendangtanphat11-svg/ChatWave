@@ -1,8 +1,7 @@
-import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { FaCheckCircle, FaExclamationCircle, FaInfoCircle, FaTimes } from 'react-icons/fa';
+import { NotificationContext } from './notificationContextValue';
 import './NotificationContext.css';
-
-const NotificationContext = createContext(null);
 
 const icons = { success: FaCheckCircle, error: FaExclamationCircle, info: FaInfoCircle };
 
@@ -53,10 +52,4 @@ export function NotificationProvider({ children }) {
             </section>
         </div>}
     </NotificationContext.Provider>;
-}
-
-export function useNotifications() {
-    const context = useContext(NotificationContext);
-    if (!context) throw new Error('useNotifications phải được dùng bên trong NotificationProvider.');
-    return context;
 }

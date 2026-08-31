@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FaComments, FaHeart, FaRegCommentDots, FaUserFriends, FaCalendarAlt } from 'react-icons/fa';
 import { getUserStatistics } from '../../services/userService';
 

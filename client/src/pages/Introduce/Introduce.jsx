@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { FaRegBell } from 'react-icons/fa';
 import '../../styles/global.css';
@@ -23,14 +23,6 @@ const ICONS = {
     chat: <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M4.913 2.658c2.075-.27 4.19-.408 6.337-.408 2.147 0 4.262.139 6.337.408 1.922.25 3.291 1.861 3.291 3.808v4.273c0 1.947-1.369 3.558-3.291 3.808a39.559 39.559 0 01-6.337.408 39.56 39.56 0 01-6.337-.408C2.993 14.297 1.624 12.686 1.624 10.739V6.466c0-1.947 1.369-3.558 3.291-3.808z" /></svg>,
     next: <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path fillRule="evenodd" d="M15.75 4.5a.75.75 0 01.75.75v13.5a.75.75 0 01-1.5 0V5.25a.75.75 0 01.75-.75zM4.72 6.47a.75.75 0 011.06 0l5.25 5.25a.75.75 0 010 1.06l-5.25 5.25a.75.75 0 01-1.06-1.06L9.44 12 4.72 7.28a.75.75 0 010-1.06z" clipRule="evenodd" /></svg>
 };
-
-const STATS_DATA = [
-    { value: "50.000+", label: "Người dùng" },
-    { value: "180+", label: "Quốc gia" },
-    { value: "2 triệu+", label: "Cuộc trò chuyện" },
-    { value: "99.9%", label: "Uptime" },
-    { value: "24/7", label: "Hoạt động" },
-];
 
 const FEATURES_DATA = [
     { icon: ICONS.video, title: "Video Chat", desc: "Trải nghiệm cuộc gọi video HD mượt mà và rõ nét." },

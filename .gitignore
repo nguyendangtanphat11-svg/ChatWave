@@ -1,0 +1,20 @@
+# Dependencies and generated bundles
+node_modules/
+client/node_modules/
+server/node_modules/
+client/dist/
+server/coverage/
+coverage/
+
+# Local environment files. Keep redacted templates versioned.
+.env
+.env.*
+!.env.example
+
+# Runtime uploads, logs, and editor files
+server/uploads/
+*.log
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

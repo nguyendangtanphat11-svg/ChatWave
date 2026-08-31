@@ -1,6 +1,7 @@
 .welcome-beauty-panel { width: 100%; padding: 14px; border: 1px solid rgba(196,181,253,.22); border-radius: 16px; background: linear-gradient(135deg, rgba(46,36,74,.52), rgba(21,31,55,.45)); }
 .welcome-beauty-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
 .welcome-beauty-heading > div { display: grid; gap: 3px; }
+.welcome-beauty-heading > div > svg { width: 16px; height: 16px; color: #c4b5fd; }
 .welcome-beauty-heading strong { color: #f8fafc; font-size: .92rem; }
 .welcome-beauty-heading span { color: #aeb9d2; font-size: .76rem; }
 .welcome-beauty-selected { padding: 5px 9px; border-radius: 999px; background: rgba(139,92,246,.2); color: #ddd6fe !important; font-weight: 700; white-space: nowrap; }

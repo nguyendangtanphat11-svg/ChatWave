@@ -1,4 +1,3 @@
-import React from 'react';
 import { getAvatarUrl, getInitialAvatarUrl } from '../../utils/imageUrl';
 
 const MessageItem = ({ msg, user, partnerInfo }) => {

@@ -1,4 +1,3 @@
-import React from 'react';
 
 const PersonalInfo = ({ user, isEditing, onInputChange }) => {
     // Xử lý an toàn cho ngày tham gia tránh lỗi khi chưa có dữ liệu

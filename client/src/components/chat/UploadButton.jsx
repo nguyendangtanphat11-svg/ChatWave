@@ -1,6 +1,6 @@
-import React, { useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import axios from 'axios';
-import { useNotifications } from '../../contexts/NotificationContext';
+import { useNotifications } from '../../contexts/useNotifications';
 import { CHAT_FILE_ACCEPT, CHAT_IMAGE_ACCEPT, validateChatUpload } from '../../utils/uploadValidation';
 import './UploadButton.css';
 

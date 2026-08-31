@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { useNotifications } from '../../contexts/NotificationContext';
+import { useNotifications } from '../../contexts/useNotifications';
 
 // Import các icon có sẵn
 const MicIcon = () => <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8.25 4.5a3.75 3.75 0 117.5 0v8.25a3.75 3.75 0 11-7.5 0V4.5z" /><path d="M6 10.5a.75.75 0 01.75.75v.75a4.5 4.5 0 009 0v-.75a.75.75 0 011.5 0v.75a6 6 0 11-12 0v-.75a.75.75 0 01.75-.75z" /></svg>;
@@ -16,37 +16,38 @@ const UserPlusIcon = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentC
 const ChatControls = ({ onMicToggle, onCameraToggle, onSkip, onEndCall, isMuted, isCameraOff, callState, targetUserId, socket, partnerInfo }) => {
     const { toast } = useNotifications();
     const navigate = useNavigate();
-    const [friendStatus, setFriendStatus] = useState('none');
-
-    const getResolvedUserId = () => {
-        return targetUserId || partnerInfo?.id || partnerInfo?._id || partnerInfo?.userId || partnerInfo?.user_id;
-    };
+    const [friendStatus, setFriendStatus] = useState({ targetUserId: null, status: 'none' });
+    const resolvedTargetUserId = targetUserId || partnerInfo?.id || partnerInfo?._id || partnerInfo?.userId || partnerInfo?.user_id;
+    const visibleFriendStatus = callState === 'in-call' && String(friendStatus.targetUserId) === String(resolvedTargetUserId)
+        ? friendStatus.status
+        : 'none';
 
     useEffect(() => {
-        const currentTargetId = getResolvedUserId();
+        const currentTargetId = resolvedTargetUserId;
         if (callState !== "in-call" || !currentTargetId || currentTargetId === 'undefined') {
-            setFriendStatus('none');
-            return;
+            return undefined;
         }
 
+        let isCurrent = true;
         const checkStatus = async () => {
             try {
                 const token = localStorage.getItem('token');
                 const res = await axios.get(`/api/friends/status/${currentTargetId}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
-                setFriendStatus(res.data.status);
+                if (isCurrent) setFriendStatus({ targetUserId: currentTargetId, status: res.data.status });
             } catch (error) {
                 console.error('Lỗi kiểm tra trạng thái kết bạn:', error);
-                setFriendStatus('none');
+                if (isCurrent) setFriendStatus({ targetUserId: currentTargetId, status: 'none' });
             }
         };
 
         checkStatus();
-    }, [targetUserId, partnerInfo, callState]);
+        return () => { isCurrent = false; };
+    }, [callState, resolvedTargetUserId]);
 
     const handleSendFriendRequest = async () => {
-        const currentTargetId = getResolvedUserId();
+        const currentTargetId = resolvedTargetUserId;
         if (!currentTargetId) {
             toast('Không tìm thấy ID của đối phương!', 'error');
             return;
@@ -58,7 +59,7 @@ const ChatControls = ({ onMicToggle, onCameraToggle, onSkip, onEndCall, isMuted,
                 { receiverId: currentTargetId },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
-            setFriendStatus('request_sent');
+            setFriendStatus({ targetUserId: currentTargetId, status: 'request_sent' });
             toast('Đã gửi lời mời kết bạn thành công!', 'success');
 
             if (socket) {
@@ -109,7 +110,7 @@ const ChatControls = ({ onMicToggle, onCameraToggle, onSkip, onEndCall, isMuted,
 
             {callState === "in-call" && (
                 <>
-                    {friendStatus === 'friends' ? (
+                    {visibleFriendStatus === 'friends' ? (
                         <span className="friend-badge" style={{ fontSize: '0.8rem', padding: '0 10px', color: '#10B981', fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>
                             ★ Bạn bè
                         </span>
@@ -117,19 +118,19 @@ const ChatControls = ({ onMicToggle, onCameraToggle, onSkip, onEndCall, isMuted,
                         <button
                             className="chat-control-btn add-friend"
                             onClick={handleSendFriendRequest}
-                            disabled={friendStatus === 'request_sent'}
-                            title={friendStatus === 'request_sent' ? "Đã gửi lời mời kết bạn" : "Kết bạn"}
+                            disabled={visibleFriendStatus === 'request_sent'}
+                            title={visibleFriendStatus === 'request_sent' ? "Đã gửi lời mời kết bạn" : "Kết bạn"}
                             style={{ 
-                                background: friendStatus === 'request_sent' ? '#6B7280' : '#4F46E5', 
+                                background: visibleFriendStatus === 'request_sent' ? '#6B7280' : '#4F46E5',
                                 color: '#fff',
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: '5px',
-                                padding: friendStatus === 'request_sent' ? '0 10px' : '0'
+                                padding: visibleFriendStatus === 'request_sent' ? '0 10px' : '0'
                             }}
                         >
                             <UserPlusIcon />
-                            {friendStatus === 'request_sent' && <span style={{ fontSize: '0.8rem' }}>Đã gửi</span>}
+                            {visibleFriendStatus === 'request_sent' && <span style={{ fontSize: '0.8rem' }}>Đã gửi</span>}
                         </button>
                     )}
 

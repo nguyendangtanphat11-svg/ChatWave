@@ -1,4 +1,3 @@
-import React from 'react';
 import { FaComment, FaUserMinus } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { getAvatarUrl, getInitialAvatarUrl } from '../../utils/imageUrl';

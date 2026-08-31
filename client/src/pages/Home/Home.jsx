@@ -1,9 +1,7 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { 
-    FaRegBell, FaUserFriends, FaUserPlus 
-} from 'react-icons/fa';
+import { FaUserFriends, FaUserPlus } from 'react-icons/fa';
 import FriendCard from '../../components/friends/FriendCard';
 import RequestCard from '../../components/friends/RequestCard';
 import FriendChatBox from '../../components/friends/FriendChatBox';
@@ -12,15 +10,27 @@ import PostFeed from '../../components/posts/PostFeed';
 // Import Header và Footer đã được tách file (điều chỉnh đường dẫn './' cho phù hợp với cấu trúc thư mục của bạn)
 import DashboardHeader from './DashboardHeader';
 import Footer from './Footer';
-import { useUser } from '../../contexts/UserContext';
-import { useNotifications } from '../../contexts/NotificationContext';
+import { useUser } from '../../contexts/useUser';
+import { useNotifications } from '../../contexts/useNotifications';
 
 import '../../styles/global.css';
 import './Home.css';
 
+const getFriendsSnapshot = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return { friends: [], pendingRequests: [] };
+
+    const response = await axios.get('/api/friends/list', {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+    return {
+        friends: response.data.friends || [],
+        pendingRequests: response.data.pendingRequests || [],
+    };
+};
+
 // SVG Icons được đưa ra ngoài component để tránh khởi tạo lại mỗi lần render
 const ICONS = {
-    camera: <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.5 4.5a3 3 0 00-3 3v9a3 3 0 003 3h8.25a3 3 0 003-3v-2.25l3.44 1.72a.75.75 0 001.06-.62v-6.66a.75.75 0 00-1.06-.62l-3.44 1.72V7.5a3 3 0 00-3-3H4.5z" /></svg>,
     mic: <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8.25 4.5a3.75 3.75 0 117.5 0v8.25a3.75 3.75 0 11-7.5 0V4.5z" /><path d="M6 10.5a.75.75 0 01.75.75v.75a4.5 4.5 0 009 0v-.75a.75.75 0 011.5 0v.75a6 6 0 11-12 0v-.75a.75.75 0 01.75-.75z" /></svg>,
     chat: <svg viewBox="0 0 24 24" fill="currentColor"><path fillRule="evenodd" d="M4.804 21.644A6.707 6.707 0 006 21.75a6.75 6.75 0 006.75-6.75v-2.5a.75.75 0 011.5 0v2.5a8.25 8.25 0 01-8.25 8.25c-1.33 0-2.605-.308-3.746-.882a.75.75 0 01.293-1.376z" clipRule="evenodd" /><path d="M12 2.25a.75.75 0 01.75.75v6.94l2.28-2.28a.75.75 0 111.06 1.06l-3.75 3.75a.75.75 0 01-1.06 0L8.47 7.97a.75.75 0 111.06-1.06l2.28 2.28V3a.75.75 0 01.75-.75z" /></svg>,
     next: <svg viewBox="0 0 24 24" fill="currentColor"><path fillRule="evenodd" d="M16.28 11.47a.75.75 0 010 1.06l-7.5 7.5a.75.75 0 01-1.06-1.06L14.69 12 7.72 5.03a.75.75 0 011.06-1.06l7.5 7.5z" clipRule="evenodd" /></svg>,
@@ -327,8 +337,23 @@ const Dashboard = ({ socket }) => {
     }, []);
 
     useEffect(() => {
-        fetchFriendsData();
-    }, [fetchFriendsData]);
+        let isCurrent = true;
+        const loadInitialFriends = async () => {
+            try {
+                const { friends: nextFriends, pendingRequests: nextPendingRequests } = await getFriendsSnapshot();
+                if (!isCurrent) return;
+                setFriends(nextFriends);
+                setPendingRequests(nextPendingRequests);
+            } catch (error) {
+                console.error('Không thể tải dữ liệu bạn bè:', error);
+            } finally {
+                if (isCurrent) setLoadingFriends(false);
+            }
+        };
+
+        void loadInitialFriends();
+        return () => { isCurrent = false; };
+    }, []);
 
     useEffect(() => {
         if (!socket) return undefined;

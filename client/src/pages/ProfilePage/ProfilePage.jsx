@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './ProfilePage.css';
 import ProfileCover from '../../components/ProfilePage/ProfileCover';
@@ -11,7 +11,7 @@ import SecuritySettings from '../../components/ProfilePage/SecuritySettings';
 import AppSettings from '../../components/ProfilePage/AppSettings';
 import LoadingSpinner from '../../components/common/LoadingSpinner/LoadingSpinner';
 import Notification from '../../components/common/Notification/Notification';
-import { useUser } from '../../contexts/UserContext';
+import { useUser } from '../../contexts/useUser';
 import { updateAvatar, updateCover, updateProfile } from '../../services/userService';
 import PostFeed from '../../components/posts/PostFeed';
 import ProfileFriends from '../../components/ProfilePage/ProfileFriends';
@@ -22,11 +22,11 @@ const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 
 const ProfilePage = () => {
     const navigate = useNavigate();
-    const { user, setUser, refreshUser } = useUser();
+    const { user, setUser, refreshUser, isUserLoading } = useUser();
     const avatarInputRef = useRef(null);
     const coverInputRef = useRef(null);
     const [initialUser, setInitialUser] = useState(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [activeTab, setActiveTab] = useState('about');
@@ -36,6 +36,9 @@ const ProfilePage = () => {
     const [coverFile, setCoverFile] = useState(null);
     const [coverPreview, setCoverPreview] = useState(null);
 
+    const baselineUser = initialUser || user;
+    const profileIsLoading = isUserLoading || isLoading;
+
     const showNotification = useCallback((message, type) => {
         setNotification({ message, type });
     }, []);
@@ -44,8 +47,11 @@ const ProfilePage = () => {
         if (inputRef.current) inputRef.current.value = '';
     };
 
+    const captureInitialUser = () => {
+        setInitialUser((current) => current || (user ? { ...user } : null));
+    };
+
     const fetchUserProfile = useCallback(async () => {
-        setIsLoading(true);
         try {
             const refreshedUser = await refreshUser();
             if (!refreshedUser) {
@@ -61,8 +67,6 @@ const ProfilePage = () => {
             setIsLoading(false);
         }
     }, [navigate, refreshUser, showNotification]);
-
-    useEffect(() => { fetchUserProfile(); }, [fetchUserProfile]);
 
     useEffect(() => () => {
         if (avatarPreview) URL.revokeObjectURL(avatarPreview);
@@ -89,6 +93,7 @@ const ProfilePage = () => {
     };
 
     const handleAvatarChange = (event) => {
+        captureInitialUser();
         handleImageChange(event, setAvatarFile, setAvatarPreview, AVATAR_MAX_SIZE);
         setIsEditing(true);
     };
@@ -97,6 +102,7 @@ const ProfilePage = () => {
 
     const handleInputChange = (event) => {
         const { name, value } = event.target;
+        captureInitialUser();
         setUser((previousUser) => ({ ...previousUser, [name]: value }));
     };
 
@@ -113,21 +119,19 @@ const ProfilePage = () => {
     };
 
     const syncProfile = async () => {
-        const refreshedUser = await refreshUser();
-        setInitialUser({ ...refreshedUser });
-        return refreshedUser;
+        return fetchUserProfile();
     };
 
     const handleSaveProfile = async () => {
-        if (!user || !initialUser) return;
+        if (!user || !baselineUser) return;
         setIsSaving(true);
         try {
             if (avatarFile) await updateAvatar(avatarFile);
             const changedData = ['username', 'fullName', 'gender', 'country'].reduce((result, key) => {
-                if (user[key] !== initialUser[key]) result[key] = user[key];
+                if (user[key] !== baselineUser[key]) result[key] = user[key];
                 return result;
             }, {});
-            if (Object.keys(changedData).length > 0) await updateProfile({ ...initialUser, ...changedData });
+            if (Object.keys(changedData).length > 0) await updateProfile({ ...baselineUser, ...changedData });
             if (!avatarFile && Object.keys(changedData).length === 0) {
                 showNotification('Không có thay đổi để lưu.', 'info');
                 return;
@@ -161,7 +165,7 @@ const ProfilePage = () => {
     };
 
     const handleCancel = () => {
-        if (initialUser) setUser({ ...initialUser });
+        if (baselineUser) setUser({ ...baselineUser });
         clearAvatarDraft();
         setIsEditing(false);
     };
@@ -173,7 +177,7 @@ const ProfilePage = () => {
         navigate('/login');
     };
 
-    if (isLoading && !user) return <LoadingSpinner />;
+    if (profileIsLoading && !user) return <LoadingSpinner />;
     if (!user) return <div className="profile-container">Không tìm thấy thông tin người dùng.</div>;
 
     const showAbout = activeTab === 'about';
@@ -181,7 +185,7 @@ const ProfilePage = () => {
 
     return (
         <main className="profile-container profile-fade-in">
-            {isLoading && <div className="profile-loading-overlay"><LoadingSpinner /></div>}
+            {profileIsLoading && <div className="profile-loading-overlay"><LoadingSpinner /></div>}
             {notification.message && <Notification message={notification.message} type={notification.type} />}
             <div className="profile-shell">
                 <ProfileCover user={user} coverPreview={coverPreview} coverInputRef={coverInputRef} isSaving={isSaving} onCoverChange={handleCoverChange} onSave={handleSaveCover} onCancel={clearCoverDraft} />

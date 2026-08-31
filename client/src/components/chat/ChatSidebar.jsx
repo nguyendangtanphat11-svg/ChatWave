@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import ImageMessage from './ImageMessage';
 import FileMessage from './FileMessage';
 import UploadButton from './UploadButton';

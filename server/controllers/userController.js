@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const bcrypt = require('bcrypt');
 const fs = require('fs');
 const path = require('path');
 
@@ -122,6 +123,42 @@ const updateImage = (field, directory, successMessage) => async (req, res) => {
 const updateUserAvatar = updateImage('avatar', 'images', 'Cập nhật ảnh đại diện thành công!');
 const updateUserCover = updateImage('cover_image', 'covers', 'Cập nhật ảnh bìa thành công!');
 
+const changeUserPassword = async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+
+        if (typeof currentPassword !== 'string' || typeof newPassword !== 'string' || !currentPassword || !newPassword) {
+            return res.status(400).json({ message: 'Vui lòng nhập mật khẩu hiện tại và mật khẩu mới.' });
+        }
+        if (newPassword.length < 6) {
+            return res.status(400).json({ message: 'Mật khẩu mới phải có ít nhất 6 ký tự.' });
+        }
+        if (Buffer.byteLength(newPassword, 'utf8') > 72) {
+            return res.status(400).json({ message: 'Mật khẩu mới không được vượt quá 72 byte.' });
+        }
+
+        const [users] = await db.query('SELECT id, password FROM users WHERE id = ?', [req.user.id]);
+        if (!users.length) return res.status(404).json({ message: 'Không tìm thấy người dùng.' });
+
+        const user = users[0];
+        if (!user.password) {
+            return res.status(400).json({ message: 'Tài khoản đăng nhập qua mạng xã hội không hỗ trợ đổi mật khẩu.' });
+        }
+
+        const passwordMatches = await bcrypt.compare(currentPassword, user.password);
+        if (!passwordMatches) {
+            return res.status(400).json({ message: 'Mật khẩu hiện tại không chính xác.' });
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword, 12);
+        await db.query('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, req.user.id]);
+        return res.status(200).json({ message: 'Đổi mật khẩu thành công!' });
+    } catch (error) {
+        console.error('Lỗi khi đổi mật khẩu:', error);
+        return res.status(500).json({ message: 'Lỗi máy chủ' });
+    }
+};
+
 const searchUsers = async (req, res) => {
     const { query } = req.query;
     if (!query) return res.status(400).json({ message: 'Vui lòng cung cấp từ khóa tìm kiếm.' });
@@ -134,4 +171,4 @@ const searchUsers = async (req, res) => {
     }
 };
 
-module.exports = { getUserProfile, getPublicProfile, getPublicFriends, getUserStatistics, updateUserProfile, updateUserAvatar, updateUserCover, searchUsers };
+module.exports = { getUserProfile, getPublicProfile, getPublicFriends, getUserStatistics, updateUserProfile, updateUserAvatar, updateUserCover, changeUserPassword, searchUsers };

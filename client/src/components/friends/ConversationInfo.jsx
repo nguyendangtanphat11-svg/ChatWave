@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import axios from 'axios';
 import { FaExclamationTriangle, FaFileAlt, FaShieldAlt, FaTimes } from 'react-icons/fa';
 import { getAvatarUrl } from '../../utils/imageUrl';
-import { useNotifications } from '../../contexts/NotificationContext';
+import { useNotifications } from '../../contexts/useNotifications';
 import './ConversationInfo.css';
 
 const decodeAttachment = (message = '') => {

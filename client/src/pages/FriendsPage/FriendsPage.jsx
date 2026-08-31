@@ -1,13 +1,10 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import {
   FaArrowLeft,
-  FaBell,
   FaCheck,
   FaCommentDots,
-  FaFileAlt,
   FaSearch,
-  FaShieldAlt,
   FaUserFriends,
   FaUserMinus,
   FaUserPlus,
@@ -16,7 +13,7 @@ import { useNavigate } from "react-router-dom";
 import FriendChatBox from "../../components/friends/FriendChatBox";
 import ConversationInfo from "../../components/friends/ConversationInfo";
 import { getAvatarUrl, getInitialAvatarUrl } from "../../utils/imageUrl";
-import { useNotifications } from "../../contexts/NotificationContext";
+import { useNotifications } from "../../contexts/useNotifications";
 import "./FriendsPage.css";
 import "./FriendActions.css";
 import "./FriendsChatViewport.css";
@@ -24,6 +21,14 @@ import "./FriendsChatViewport.css";
 const auth = () => ({
   headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
 });
+
+const getFriendsSnapshot = async () => {
+  const response = await axios.get("/api/friends/list", auth());
+  return {
+    friends: response.data.friends || [],
+    pendingRequests: response.data.pendingRequests || [],
+  };
+};
 
 const FriendsPage = ({ socket }) => {
   const { toast, confirm } = useNotifications();
@@ -33,16 +38,21 @@ const FriendsPage = ({ socket }) => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFriend, setSelectedFriend] = useState(null);
-  const [currentUser, setCurrentUser] = useState(null);
+  const [currentUser] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("user"));
+    } catch {
+      return null;
+    }
+  });
   const [incomingCall, setIncomingCall] = useState(null);
   const navigate = useNavigate();
 
   const fetchFriendsData = async () => {
     try {
-      const response = await axios.get("/api/friends/list", auth());
-      const nextFriends = response.data.friends || [];
+      const { friends: nextFriends, pendingRequests: nextPendingRequests } = await getFriendsSnapshot();
       setFriends(nextFriends);
-      setPendingRequests(response.data.pendingRequests || []);
+      setPendingRequests(nextPendingRequests);
       setSelectedFriend((current) =>
         current
           ? nextFriends.find(
@@ -60,12 +70,22 @@ const FriendsPage = ({ socket }) => {
   };
 
   useEffect(() => {
-    try {
-      setCurrentUser(JSON.parse(localStorage.getItem("user")));
-    } catch {
-      setCurrentUser(null);
-    }
-    fetchFriendsData();
+    let isCurrent = true;
+    const loadInitialFriends = async () => {
+      try {
+        const { friends: nextFriends, pendingRequests: nextPendingRequests } = await getFriendsSnapshot();
+        if (!isCurrent) return;
+        setFriends(nextFriends);
+        setPendingRequests(nextPendingRequests);
+      } catch (error) {
+        console.error("Không thể tải danh sách bạn bè:", error);
+      } finally {
+        if (isCurrent) setLoading(false);
+      }
+    };
+
+    void loadInitialFriends();
+    return () => { isCurrent = false; };
   }, []);
 
   useEffect(() => {

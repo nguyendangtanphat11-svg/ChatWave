@@ -1,4 +1,3 @@
-import React from 'react';
 import { FaCalendarAlt, FaCircle } from 'react-icons/fa';
 
 const ProfileIntro = ({ user }) => {

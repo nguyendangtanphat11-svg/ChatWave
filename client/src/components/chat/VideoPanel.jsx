@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { getAvatarUrl, getInitialAvatarUrl } from '../../utils/imageUrl';
 import './VideoPanel.css';
 import './VideoBeauty.css';

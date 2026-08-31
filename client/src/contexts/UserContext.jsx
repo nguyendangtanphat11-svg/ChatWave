@@ -1,7 +1,7 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { getProfile } from '../services/userService';
+import { UserContext } from './userContextValue';
 
-const UserContext = createContext(null);
 const withAvatarVersion = (profile, previousUser) => ({
     ...profile,
     avatarVersion: profile.avatar !== previousUser?.avatar
@@ -27,7 +27,7 @@ export const UserProvider = ({ children }) => {
         }
     });
     const userRef = useRef(user);
-    const [isUserLoading, setIsUserLoading] = useState(false);
+    const [isUserLoading, setIsUserLoading] = useState(() => Boolean(localStorage.getItem('token')));
 
     useEffect(() => {
         userRef.current = user;
@@ -65,22 +65,30 @@ export const UserProvider = ({ children }) => {
     }, [persistUser]);
 
     useEffect(() => {
-        if (localStorage.getItem('token')) {
-            refreshUser().catch((error) => {
-                if (error.response?.status === 401) {
+        const token = localStorage.getItem('token');
+        if (!token) return undefined;
+
+        let isCurrent = true;
+        const loadInitialUser = async () => {
+            try {
+                const data = await getProfile();
+                if (isCurrent && localStorage.getItem('token') === token) {
+                    persistUser(withAvatarVersion(data, userRef.current));
+                }
+            } catch (error) {
+                if (isCurrent && error.response?.status === 401) {
                     localStorage.removeItem('token');
                     persistUser(null);
                 }
-            });
-        }
-    }, [persistUser, refreshUser]);
+            } finally {
+                if (isCurrent) setIsUserLoading(false);
+            }
+        };
+
+        void loadInitialUser();
+        return () => { isCurrent = false; };
+    }, [persistUser]);
 
     const value = useMemo(() => ({ user, setUser: persistUser, refreshUser, isUserLoading }), [user, persistUser, refreshUser, isUserLoading]);
     return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
-};
-
-export const useUser = () => {
-    const context = useContext(UserContext);
-    if (!context) throw new Error('useUser must be used inside UserProvider');
-    return context;
 };

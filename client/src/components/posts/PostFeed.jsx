@@ -1,9 +1,9 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import { FaEllipsisH, FaHeart, FaImage, FaPaperPlane, FaRegComment, FaRegHeart, FaTimes, FaTrash, FaUndo } from 'react-icons/fa';
 import { getAvatarUrl, getInitialAvatarUrl } from '../../utils/imageUrl';
 import { CHAT_IMAGE_ACCEPT, validateChatUpload } from '../../utils/uploadValidation';
-import { useNotifications } from '../../contexts/NotificationContext';
+import { useNotifications } from '../../contexts/useNotifications';
 import './PostFeed.css';
 import './PostInteractions.css';
 import './PostFacebook.css';
@@ -28,9 +28,10 @@ function CommentContent({ content }) {
     </>;
 }
 
-function PostCard({ post, mine, socket, onDelete, onRecall }) {
+function PostCard({ post, socket, onDelete, onRecall }) {
     const { toast, confirm } = useNotifications();
-    const [currentPost, setCurrentPost] = useState(post);
+    const [postUpdates, setPostUpdates] = useState({});
+    const currentPost = { ...post, ...postUpdates };
     const [comments, setComments] = useState([]);
     const [commentsOpen, setCommentsOpen] = useState(false);
     const [commentText, setCommentText] = useState('');
@@ -42,30 +43,37 @@ function PostCard({ post, mine, socket, onDelete, onRecall }) {
     const [recallingCommentId, setRecallingCommentId] = useState(null);
     const commentImageRef = useRef(null);
 
-    useEffect(() => setCurrentPost(post), [post]);
-
     useEffect(() => {
         if (!socket) return undefined;
         const handleCommentRecalled = ({ postId, comment, comments: commentCount }) => {
             if (Number(postId) !== Number(currentPost.id)) return;
             setComments((previous) => previous.map((item) => Number(item.id) === Number(comment.id) ? { ...item, ...comment, recalled: true, content: '' } : item));
-            if (Number.isFinite(commentCount)) setCurrentPost((previous) => ({ ...previous, comments: commentCount }));
+            if (Number.isFinite(commentCount)) setPostUpdates((previous) => ({ ...previous, comments: commentCount }));
         };
         socket.on('postCommentRecalled', handleCommentRecalled);
         return () => socket.off('postCommentRecalled', handleCommentRecalled);
     }, [socket, currentPost.id]);
 
+    const handleInteractionError = (error, fallbackMessage) => {
+        if (error.response?.status === 404) onRecall(currentPost.id);
+        toast(error.response?.data?.message || fallbackMessage, 'error');
+    };
+
     const toggleLike = async () => {
-        const response = await axios.post(`/api/posts/${currentPost.id}/like`, {}, authHeaders());
-        setCurrentPost((previous) => ({ ...previous, ...response.data }));
+        try {
+            const response = await axios.post(`/api/posts/${currentPost.id}/like`, {}, authHeaders());
+            setPostUpdates((previous) => ({ ...previous, ...response.data }));
+        } catch (error) { handleInteractionError(error, 'Không thể cập nhật lượt thích.'); }
     };
 
     const toggleComments = async () => {
-        if (!commentsOpen) {
-            const response = await axios.get(`/api/posts/${currentPost.id}/comments`, authHeaders());
-            setComments(response.data.comments || []);
-        }
-        setCommentsOpen((open) => !open);
+        try {
+            if (!commentsOpen) {
+                const response = await axios.get(`/api/posts/${currentPost.id}/comments`, authHeaders());
+                setComments(response.data.comments || []);
+            }
+            setCommentsOpen((open) => !open);
+        } catch (error) { handleInteractionError(error, 'Không thể tải bình luận.'); }
     };
 
     const sendComment = async (event) => {
@@ -73,11 +81,13 @@ function PostCard({ post, mine, socket, onDelete, onRecall }) {
         const text = commentText.trim();
         if ((!text && !commentImage) || uploading) return;
         const content = `${COMMENT_PREFIX}${JSON.stringify({ text, image: commentImage?.url || null })}`;
-        const response = await axios.post(`/api/posts/${currentPost.id}/comments`, { content }, authHeaders());
-        setComments((previous) => [...previous, response.data.comment]);
-        setCurrentPost((previous) => ({ ...previous, comments: previous.comments + 1 }));
-        setCommentText('');
-        setCommentImage(null);
+        try {
+            const response = await axios.post(`/api/posts/${currentPost.id}/comments`, { content }, authHeaders());
+            setComments((previous) => [...previous, response.data.comment]);
+            setPostUpdates((previous) => ({ ...previous, comments: Number(currentPost.comments || 0) + 1 }));
+            setCommentText('');
+            setCommentImage(null);
+        } catch (error) { handleInteractionError(error, 'Không thể gửi bình luận.'); }
     };
 
     const uploadCommentImage = async (event) => {
@@ -121,7 +131,7 @@ function PostCard({ post, mine, socket, onDelete, onRecall }) {
         try {
             const response = await axios.patch(`/api/posts/${currentPost.id}/comments/${commentId}/recall`, {}, authHeaders());
             setComments((previous) => previous.map((comment) => Number(comment.id) === Number(commentId) ? { ...comment, recalled: true, content: '' } : comment));
-            setCurrentPost((previous) => ({ ...previous, comments: Number(response.data.comments) }));
+            setPostUpdates((previous) => ({ ...previous, comments: Number(response.data.comments) }));
         } catch (error) { toast(error.response?.data?.message || 'Không thể thu hồi bình luận.', 'error'); }
         finally { setRecallingCommentId(null); setActiveCommentId(null); }
     };
@@ -212,6 +222,6 @@ export default function PostFeed({ user, mine = false, socket }) {
             <button className="post-create-button" onClick={() => setComposerOpen(true)}><span>+</span>Tạo bài viết</button>
             {composerOpen && <div className="post-modal"><div className="post-composer"><header><strong>Tạo bài viết</strong><button type="button" onClick={() => setComposerOpen(false)} aria-label="Đóng">×</button></header><div><img src={getAvatarUrl(user?.avatar, user?.username)} alt="" /><textarea autoFocus value={content} onChange={(event) => setContent(event.target.value)} placeholder="Bạn đang nghĩ gì?" /></div>{preview && <img className="post-preview" src={preview} alt="Xem trước" />}<footer><label><FaImage />Ảnh<input ref={imageRef} type="file" accept={CHAT_IMAGE_ACCEPT} onChange={selectPostImage} /></label><button disabled={saving || (!content.trim() && !image)} onClick={submitPost}><FaPaperPlane />Đăng bài</button></footer></div></div>}
         </>}
-        {posts.map((post) => <PostCard key={post.id} post={post} mine={mine} socket={socket} onDelete={removePost} onRecall={markRecalled} />)}
+        {posts.map((post) => <PostCard key={post.id} post={post} socket={socket} onDelete={removePost} onRecall={markRecalled} />)}
     </section>;
 }

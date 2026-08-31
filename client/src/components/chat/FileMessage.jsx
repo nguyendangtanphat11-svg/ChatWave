@@ -1,4 +1,3 @@
-import React from 'react';
 import { getUploadUrl } from '../../utils/imageUrl';
 import './FileMessage.css';
 

@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { FaComment, FaUserMinus } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { getAvatarUrl, getInitialAvatarUrl } from '../../utils/imageUrl';
-import { useNotifications } from '../../contexts/NotificationContext';
+import { useNotifications } from '../../contexts/useNotifications';
 import './ProfileFriends.css';
 
 export default function ProfileFriends() {
